@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Mall Mood Meter – Dashboard</title>
+  <!-- PWA manifest and meta tags -->
   <link rel="manifest" href="/mall-mood-meter/manifest.json">
   <meta name="theme-color" content="#4f46e5">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="/mall-mood-meter/icons/ios/icon-192x192.png">
   
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mall Mood Meter – Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -584,7 +586,8 @@
   document.getElementById('google-signin-btn').addEventListener('click', window.handleGoogleSignIn);
 </script>
 
-  <script>
+<!-- PWA Service Worker Registration and Install Button -->
+<script>
   // Register service worker
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -594,7 +597,7 @@
     });
   }
 
-  // Optional: Show custom install button (for browsers that support beforeinstallprompt)
+  // Show install button (for Android/Chrome)
   let deferredPrompt;
   const installBtn = document.createElement('button');
   installBtn.textContent = '📲 Install App';
