@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="manifest" href="/mall-mood-meter/manifest.json">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mall Mood Meter – Dashboard</title>
@@ -577,6 +582,53 @@
   });
   // Attach Google sign‑in listener
   document.getElementById('google-signin-btn').addEventListener('click', window.handleGoogleSignIn);
+</script>
+
+  <script>
+  // Register service worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/mall-mood-meter/sw.js')
+        .then(reg => console.log('Service Worker registered', reg))
+        .catch(err => console.log('SW registration failed', err));
+    });
+  }
+
+  // Optional: Show custom install button (for browsers that support beforeinstallprompt)
+  let deferredPrompt;
+  const installBtn = document.createElement('button');
+  installBtn.textContent = '📲 Install App';
+  installBtn.style.position = 'fixed';
+  installBtn.style.bottom = '20px';
+  installBtn.style.right = '20px';
+  installBtn.style.backgroundColor = '#4f46e5';
+  installBtn.style.color = '#fff';
+  installBtn.style.border = 'none';
+  installBtn.style.borderRadius = '50px';
+  installBtn.style.padding = '12px 20px';
+  installBtn.style.fontSize = '14px';
+  installBtn.style.fontWeight = 'bold';
+  installBtn.style.cursor = 'pointer';
+  installBtn.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+  installBtn.style.zIndex = '1000';
+  installBtn.style.display = 'none';
+  document.body.appendChild(installBtn);
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = 'block';
+    installBtn.addEventListener('click', () => {
+      installBtn.style.display = 'none';
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('User accepted install');
+        }
+        deferredPrompt = null;
+      });
+    });
+  });
 </script>
 </body>
 </html>
