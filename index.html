@@ -363,7 +363,7 @@ const firebaseConfig = {
 
     // Spam guard – session-level (1 submission per 60s)
     const lastSubmit = Number(sessionStorage.getItem('lastSubmit') || 0);
-    if (Date.now() - lastSubmit < 60_000) {
+    if (Date.now() - lastSubmit < 05_000) {
       showError('Please wait a moment before submitting again. Thank you!');
       return;
     }
