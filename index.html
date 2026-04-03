@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How Was Your Visit?</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary:   #4f46e5;
+      --primary-light: #eef2ff;
+      --happy:     #16a34a;
+      --neutral:   #d97706;
+      --unhappy:   #dc2626;
+      --bg:        #f8fafc;
+      --card:      #ffffff;
+      --text:      #1e293b;
+      --muted:     #64748b;
+      --border:    #e2e8f0;
+      --radius:    16px;
+      --shadow:    0 4px 24px rgba(0,0,0,.08);
+    }
+
+    body {
+      min-height: 100dvh;
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      width: 100%;
+      max-width: 420px;
+      padding: 36px 28px 32px;
+      text-align: center;
+    }
+
+    .mall-logo {
+      width: 56px;
+      height: 56px;
+      background: var(--primary-light);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 28px;
+    }
+
+    .store-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 6px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 28px;
+    }
+
+    /* ── Mood buttons ── */
+    .mood-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .mood-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 18px 8px;
+      border: 2.5px solid var(--border);
+      border-radius: 14px;
+      background: #fff;
+      cursor: pointer;
+      transition: all .18s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .mood-btn:hover  { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.1); }
+    .mood-btn:active { transform: scale(.96); }
+
+    .mood-btn .emoji { font-size: 42px; line-height: 1; }
+    .mood-btn .label { font-size: 12px; font-weight: 600; color: var(--muted); }
+
+    .mood-btn.selected-happy    { border-color: var(--happy);   background: #f0fdf4; }
+    .mood-btn.selected-neutral  { border-color: var(--neutral); background: #fffbeb; }
+    .mood-btn.selected-unhappy  { border-color: var(--unhappy); background: #fef2f2; }
+
+    .mood-btn.selected-happy    .label { color: var(--happy); }
+    .mood-btn.selected-neutral  .label { color: var(--neutral); }
+    .mood-btn.selected-unhappy  .label { color: var(--unhappy); }
+
+    /* ── Comment ── */
+    .comment-wrap { margin-bottom: 22px; text-align: left; }
+
+    .comment-wrap label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 7px;
+    }
+
+    .comment-wrap textarea {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 13px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      resize: none;
+      height: 80px;
+      transition: border-color .18s;
+      outline: none;
+    }
+
+    .comment-wrap textarea:focus { border-color: var(--primary); }
+
+    /* ── Submit ── */
+    .submit-btn {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 12px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .18s, opacity .18s, transform .1s;
+      letter-spacing: .02em;
+    }
+
+    .submit-btn:hover:not(:disabled)  { background: #4338ca; }
+    .submit-btn:active:not(:disabled) { transform: scale(.98); }
+    .submit-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+    /* ── Error ── */
+    .error-msg {
+      display: none;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 10px;
+      padding: 11px 14px;
+      color: var(--unhappy);
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+
+    /* ── Thank-you state ── */
+    .thankyou {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0 4px;
+    }
+
+    .thankyou .big-emoji { font-size: 64px; animation: pop .4s cubic-bezier(.36,.07,.19,.97); }
+    .thankyou h2 { font-size: 22px; font-weight: 700; color: var(--text); }
+    .thankyou p  { font-size: 14px; color: var(--muted); }
+
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: var(--border);
+      border-radius: 99px;
+      margin-top: 16px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 99px;
+      width: 0%;
+      animation: shrink 4s linear forwards;
+    }
+
+    @keyframes pop {
+      0%   { transform: scale(.5); opacity: 0; }
+      70%  { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes shrink {
+      from { width: 100%; }
+      to   { width: 0%; }
+    }
+
+    /* ── Loading spinner ── */
+    .spinner {
+      display: inline-block;
+      width: 18px; height: 18px;
+      border: 2.5px solid rgba(255,255,255,.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-store {
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="root-card" class="card">
+
+  <!-- Default / submission view -->
+  <div id="form-view">
+    <div class="mall-logo">🏪</div>
+    <div class="store-name" id="store-label">Loading store…</div>
+    <h1>How was your experience?</h1>
+    <p class="subtitle">Tap an emoji to share your mood – it only takes a second!</p>
+
+    <div class="mood-grid">
+      <button class="mood-btn" id="btn-happy"   onclick="selectMood('happy')"  aria-label="Happy">
+        <span class="emoji">😊</span>
+        <span class="label">Happy</span>
+      </button>
+      <button class="mood-btn" id="btn-neutral" onclick="selectMood('neutral')" aria-label="Neutral">
+        <span class="emoji">😐</span>
+        <span class="label">Neutral</span>
+      </button>
+      <button class="mood-btn" id="btn-unhappy" onclick="selectMood('unhappy')" aria-label="Unhappy">
+        <span class="emoji">😠</span>
+        <span class="label">Unhappy</span>
+      </button>
+    </div>
+
+    <div class="comment-wrap">
+      <label for="comment">Any comment? <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+      <textarea id="comment" placeholder="Tell us more…" maxlength="300"></textarea>
+    </div>
+
+    <div class="error-msg" id="error-msg"></div>
+
+    <button class="submit-btn" id="submit-btn" onclick="submitMood()" disabled>
+      Submit Feedback
+    </button>
+  </div>
+
+  <!-- Thank-you view -->
+  <div id="thankyou-view" class="thankyou">
+    <div class="big-emoji" id="ty-emoji">😊</div>
+    <h2>Thank you!</h2>
+    <p>Your feedback helps us improve your experience.</p>
+    <div class="progress-bar"><div class="progress-bar-fill" id="progress-fill"></div></div>
+  </div>
+
+</div>
+
+<!-- Firebase 10 Modular SDK via CDN -->
+<script type="module">
+  import { initializeApp }          from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc }
+    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  /* ─────────────────────────────────────────────
+     🔧 REPLACE THIS BLOCK WITH YOUR FIREBASE CONFIG
+     (Firebase Console → Project Settings → Your Apps)
+  ───────────────────────────────────────────── */
+  const firebaseConfig = {
+    apiKey:            "YOUR_API_KEY",
+    authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId:         "YOUR_PROJECT_ID",
+    storageBucket:     "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId:             "YOUR_APP_ID"
+  };
+  /* ─────────────────────────────────────────── */
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  // ── Read storeId from URL ──
+  const params  = new URLSearchParams(window.location.search);
+  const storeId = (params.get('store') || '').trim();
+
+  let selectedMood = null;
+  let storeName    = storeId;
+
+  // Expose functions to global scope (needed for inline onclick)
+  window.selectMood  = selectMood;
+  window.submitMood  = submitMood;
+
+  // ── Init ──
+  (async function init() {
+    if (!storeId) {
+      document.getElementById('root-card').remove();
+      document.body.innerHTML =
+        '<div class="error-store">⚠️ No store specified.<br>Please scan the correct QR code.</div>';
+      return;
+    }
+
+    // Attempt to fetch store name from Firestore
+    try {
+      const snap = await getDoc(doc(db, 'stores', storeId));
+      if (snap.exists()) {
+        storeName = snap.data().storeName || storeId;
+      }
+    } catch (_) { /* non-fatal – use storeId as fallback */ }
+
+    document.getElementById('store-label').textContent = storeName;
+  })();
+
+  // ── Mood selection ──
+  function selectMood(mood) {
+    selectedMood = mood;
+    const btns = { happy: 'btn-happy', neutral: 'btn-neutral', unhappy: 'btn-unhappy' };
+    Object.entries(btns).forEach(([m, id]) => {
+      const el = document.getElementById(id);
+      el.className = 'mood-btn' + (m === mood ? ` selected-${m}` : '');
+    });
+    document.getElementById('submit-btn').disabled = false;
+    hideError();
+  }
+
+  // ── Submit ──
+  async function submitMood() {
+    if (!selectedMood) { showError('Please select a mood first.'); return; }
+
+    const comment   = (document.getElementById('comment').value || '').trim();
+    const submitBtn = document.getElementById('submit-btn');
+
+    // Spam guard – session-level (1 submission per 60s)
+    const lastSubmit = Number(sessionStorage.getItem('lastSubmit') || 0);
+    if (Date.now() - lastSubmit < 60_000) {
+      showError('Please wait a moment before submitting again. Thank you!');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner"></span>Submitting…';
+
+    try {
+      await addDoc(collection(db, 'moods'), {
+        storeId,
+        mood:      selectedMood,
+        comment:   comment || null,
+        timestamp: serverTimestamp(),
+        // Anonymous session fingerprint (not personally identifiable)
+        sessionId: getSessionId()
+      });
+
+      sessionStorage.setItem('lastSubmit', String(Date.now()));
+      showThankyou();
+
+    } catch (err) {
+      console.error(err);
+      showError('Something went wrong. Please try again.');
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'Submit Feedback';
+    }
+  }
+
+  // ── Thank-you display ──
+  function showThankyou() {
+    const emojiMap = { happy: '😊', neutral: '😐', unhappy: '😠' };
+    document.getElementById('ty-emoji').textContent = emojiMap[selectedMood] || '😊';
+    document.getElementById('form-view').style.display    = 'none';
+    document.getElementById('thankyou-view').style.display = 'flex';
+
+    // Restart progress bar animation
+    const fill = document.getElementById('progress-fill');
+    fill.style.animation = 'none';
+    fill.offsetHeight; // reflow
+    fill.style.animation = '';
+
+    // Auto-reset after 4 s
+    setTimeout(() => resetForm(), 4200);
+  }
+
+  function resetForm() {
+    selectedMood = null;
+    document.getElementById('comment').value   = '';
+    document.getElementById('submit-btn').disabled = true;
+    document.getElementById('submit-btn').innerHTML = 'Submit Feedback';
+    ['btn-happy','btn-neutral','btn-unhappy'].forEach(id =>
+      document.getElementById(id).className = 'mood-btn');
+    hideError();
+    document.getElementById('thankyou-view').style.display = 'none';
+    document.getElementById('form-view').style.display      = 'block';
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error-msg');
+    el.textContent    = msg;
+    el.style.display  = 'block';
+  }
+  function hideError() {
+    document.getElementById('error-msg').style.display = 'none';
+  }
+
+  // Lightweight anonymous session ID stored in sessionStorage
+  function getSessionId() {
+    let id = sessionStorage.getItem('mmSessionId');
+    if (!id) {
+      id = Math.random().toString(36).slice(2) + Date.now().toString(36);
+      sessionStorage.setItem('mmSessionId', id);
+    }
+    return id;
+  }
+</script>
+</body>
+</html>

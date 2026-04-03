@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mall Mood Meter – QR Generator</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #4f46e5; --primary-dark: #3730a3;
+      --bg: #f1f5f9; --card: #fff; --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
+    }
+
+    body {
+      min-height: 100dvh;
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 20px;
+    }
+
+    .card {
+      background: var(--card); border-radius: 20px;
+      width: 100%; max-width: 520px;
+      padding: 36px 30px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.18);
+    }
+
+    .logo { font-size: 36px; margin-bottom: 12px; }
+    h1 { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .sub { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
+
+    /* ── Form ── */
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+    .form-group input {
+      width: 100%; padding: 11px 13px; border: 1.5px solid var(--border);
+      border-radius: 10px; font-size: 14px; font-family: inherit; color: var(--text);
+      outline: none; transition: border-color .18s;
+    }
+    .form-group input:focus { border-color: var(--primary); }
+    .form-group .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    .url-preview {
+      background: #f8fafc; border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 13px;
+      font-size: 12px; color: var(--muted); font-family: monospace;
+      word-break: break-all; margin-bottom: 20px; min-height: 36px;
+    }
+
+    .btn {
+      width: 100%; padding: 13px; border: none; border-radius: 12px;
+      background: var(--primary); color: #fff; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: background .18s; margin-bottom: 12px;
+    }
+    .btn:hover:not(:disabled) { background: var(--primary-dark); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .btn-download {
+      background: #16a34a;
+    }
+    .btn-download:hover:not(:disabled) { background: #15803d; }
+
+    /* ── QR output ── */
+    .qr-section {
+      display: none; text-align: center; padding-top: 8px;
+    }
+    .qr-wrapper {
+      display: inline-block;
+      padding: 16px; background: #fff;
+      border: 2px solid var(--border); border-radius: 12px;
+      margin-bottom: 16px;
+    }
+    .qr-wrapper canvas { display: block; }
+
+    .store-label {
+      font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px;
+    }
+    .store-url {
+      font-size: 11px; color: var(--muted); font-family: monospace;
+      word-break: break-all; margin-bottom: 18px;
+    }
+
+    /* QR size selector */
+    .size-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
+    .size-btn {
+      padding: 6px 14px; border: 1.5px solid var(--border); border-radius: 8px;
+      background: #fff; color: var(--text); font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: all .15s;
+    }
+    .size-btn.active { border-color: var(--primary); background: var(--primary); color: #fff; }
+    .size-btn:hover:not(.active) { border-color: var(--primary); color: var(--primary); }
+
+    /* Print card */
+    .print-card {
+      border: 2px dashed var(--border); border-radius: 12px; padding: 20px;
+      text-align: center; margin-top: 12px;
+    }
+    .print-card p { font-size: 11px; color: var(--muted); margin-top: 8px; }
+    .print-btn {
+      background: #fff; border: 1.5px solid var(--border); color: var(--text);
+      font-size: 12px; font-weight: 600; padding: 7px 16px; border-radius: 8px;
+      cursor: pointer; margin-top: 10px;
+    }
+    .print-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+    @media print {
+      body { background: #fff; display: block; }
+      .card { box-shadow: none; max-width: 100%; border-radius: 0; padding: 10mm; }
+      .form-section, .btn:not(.btn-download) { display: none !important; }
+      .qr-section { display: block !important; }
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">📱</div>
+  <h1>QR Code Generator</h1>
+  <p class="sub">Generate a scan-to-rate QR code for each store</p>
+
+  <!-- ── Form ── -->
+  <div class="form-section">
+    <div class="form-group">
+      <label>Store ID *</label>
+      <input type="text" id="store-id" placeholder="e.g. store_001" oninput="updatePreview()" />
+      <div class="hint">Must match the storeId used in Firestore (e.g. what you set in Admin panel)</div>
+    </div>
+
+    <div class="form-group">
+      <label>Store Name (for label)</label>
+      <input type="text" id="store-name" placeholder="e.g. Al Madina Bakery" oninput="updatePreview()" />
+    </div>
+
+    <div class="form-group">
+      <label>Base URL</label>
+      <input type="text" id="base-url" id="base-url"
+        value="https://YOUR-USERNAME.github.io/YOUR-REPO/index.html"
+        oninput="updatePreview()" />
+      <div class="hint">Replace with your actual GitHub Pages URL</div>
+    </div>
+
+    <div class="url-preview" id="url-preview">Enter a Store ID above to preview the URL…</div>
+
+    <!-- QR size picker -->
+    <div class="size-row">
+      <button class="size-btn"        data-size="200" onclick="setSize(200)">Small (200px)</button>
+      <button class="size-btn active" data-size="300" onclick="setSize(300)">Medium (300px)</button>
+      <button class="size-btn"        data-size="400" onclick="setSize(400)">Large (400px)</button>
+    </div>
+
+    <button class="btn" id="gen-btn" onclick="generateQR()" disabled>Generate QR Code</button>
+  </div>
+
+  <!-- ── QR output ── -->
+  <div class="qr-section" id="qr-section">
+    <div class="qr-wrapper">
+      <canvas id="qr-canvas"></canvas>
+    </div>
+
+    <div class="store-label"  id="qr-store-name">Store Name</div>
+    <div class="store-url"    id="qr-url-display">URL</div>
+
+    <button class="btn btn-download" onclick="downloadQR()">⬇️ Download QR as PNG</button>
+
+    <div class="print-card">
+      <strong style="font-size:14px">🖨️ Print this QR</strong>
+      <p>Place this at your checkout counter, entrance, or fitting room for customers to scan and rate their experience.</p>
+      <button class="print-btn" onclick="window.print()">🖨️ Print</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let qrSize = 300;
+
+  function updatePreview() {
+    const storeId = document.getElementById('store-id').value.trim();
+    const base    = document.getElementById('base-url').value.trim();
+    const btn     = document.getElementById('gen-btn');
+
+    if (storeId && base) {
+      const url = `${base}?store=${encodeURIComponent(storeId)}`;
+      document.getElementById('url-preview').textContent = url;
+      btn.disabled = false;
+    } else {
+      document.getElementById('url-preview').textContent = 'Enter a Store ID and Base URL above…';
+      btn.disabled = true;
+    }
+  }
+
+  function setSize(size) {
+    qrSize = size;
+    document.querySelectorAll('.size-btn').forEach(b =>
+      b.classList.toggle('active', Number(b.dataset.size) === size));
+    // Regenerate if already shown
+    if (document.getElementById('qr-section').style.display === 'block') generateQR();
+  }
+
+  function generateQR() {
+    const storeId   = document.getElementById('store-id').value.trim();
+    const storeName = document.getElementById('store-name').value.trim() || storeId;
+    const base      = document.getElementById('base-url').value.trim();
+
+    if (!storeId || !base) return;
+
+    const url    = `${base}?store=${encodeURIComponent(storeId)}`;
+    const canvas = document.getElementById('qr-canvas');
+
+    QRCode.toCanvas(canvas, url, {
+      width: qrSize,
+      margin: 2,
+      color: { dark: '#1e293b', light: '#ffffff' },
+      errorCorrectionLevel: 'H'
+    }, err => {
+      if (err) { alert('Error generating QR: ' + err.message); return; }
+
+      document.getElementById('qr-store-name').textContent  = storeName;
+      document.getElementById('qr-url-display').textContent = url;
+      document.getElementById('qr-section').style.display   = 'block';
+    });
+  }
+
+  function downloadQR() {
+    const canvas    = document.getElementById('qr-canvas');
+    const storeName = document.getElementById('store-name').value.trim() ||
+                      document.getElementById('store-id').value.trim() || 'qrcode';
+    const link      = document.createElement('a');
+    link.href       = canvas.toDataURL('image/png');
+    link.download   = `qr-${storeName.replace(/\s+/g,'_')}.png`;
+    link.click();
+  }
+</script>
+</body>
+</html>

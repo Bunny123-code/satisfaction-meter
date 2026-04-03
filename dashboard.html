@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mall Mood Meter – Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary:      #4f46e5;
+      --primary-dark: #3730a3;
+      --happy:        #16a34a;
+      --neutral:      #d97706;
+      --unhappy:      #dc2626;
+      --bg:           #f1f5f9;
+      --card:         #ffffff;
+      --text:         #1e293b;
+      --muted:        #64748b;
+      --border:       #e2e8f0;
+      --radius:       14px;
+      --shadow:       0 2px 12px rgba(0,0,0,.07);
+      --header-h:     60px;
+    }
+
+    body { background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: var(--text); }
+
+    /* ── Auth screen ── */
+    #auth-screen {
+      min-height: 100dvh;
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .auth-card {
+      background: #fff; border-radius: 20px; padding: 40px 32px;
+      width: 100%; max-width: 380px; box-shadow: 0 12px 40px rgba(0,0,0,.18);
+      text-align: center;
+    }
+    .auth-card .logo { font-size: 40px; margin-bottom: 12px; }
+    .auth-card h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+    .auth-card .sub { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
+
+    .form-group { text-align: left; margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+    .form-group input {
+      width: 100%; padding: 11px 13px; border: 1.5px solid var(--border);
+      border-radius: 10px; font-size: 14px; font-family: inherit;
+      outline: none; transition: border-color .18s; color: var(--text);
+    }
+    .form-group input:focus { border-color: var(--primary); }
+
+    .auth-btn {
+      width: 100%; padding: 13px; border: none; border-radius: 10px;
+      background: var(--primary); color: #fff; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: background .18s, opacity .18s;
+      margin-top: 4px;
+    }
+    .auth-btn:hover:not(:disabled) { background: var(--primary-dark); }
+    .auth-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+    .auth-error {
+      background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px;
+      padding: 10px 13px; color: var(--unhappy); font-size: 13px; font-weight: 500;
+      margin-bottom: 16px; display: none; text-align: left;
+    }
+
+    /* ── App shell ── */
+    #app-screen { display: none; min-height: 100dvh; }
+
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: #fff; border-bottom: 1px solid var(--border);
+      height: var(--header-h);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px; box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    .header-logo { font-size: 22px; }
+    .header-title { font-size: 16px; font-weight: 700; color: var(--text); }
+    .header-store { font-size: 12px; color: var(--muted); margin-top: 1px; }
+
+    .logout-btn {
+      padding: 7px 16px; border: 1.5px solid var(--border); border-radius: 8px;
+      background: #fff; color: var(--text); font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: background .15s;
+    }
+    .logout-btn:hover { background: #f8fafc; }
+
+    main { max-width: 960px; margin: 0 auto; padding: 24px 16px 48px; }
+
+    /* ── Filter bar ── */
+    .filter-bar {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;
+    }
+    .filter-btn {
+      padding: 8px 16px; border: 1.5px solid var(--border); border-radius: 99px;
+      background: #fff; font-size: 13px; font-weight: 600; color: var(--muted);
+      cursor: pointer; transition: all .15s;
+    }
+    .filter-btn:hover  { border-color: var(--primary); color: var(--primary); }
+    .filter-btn.active {
+      border-color: var(--primary); background: var(--primary);
+      color: #fff;
+    }
+
+    /* ── Stat cards ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px; margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--card); border-radius: var(--radius);
+      padding: 20px 18px; box-shadow: var(--shadow);
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .stat-card .sc-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+    .stat-card .sc-value { font-size: 32px; font-weight: 800; line-height: 1; }
+    .stat-card .sc-pct   { font-size: 13px; font-weight: 600; color: var(--muted); }
+    .stat-card .sc-bar   { height: 5px; border-radius: 99px; background: var(--border); margin-top: 4px; overflow: hidden; }
+    .stat-card .sc-bar-fill { height: 100%; border-radius: 99px; transition: width .5s ease; }
+
+    .stat-card.happy   .sc-value { color: var(--happy); }
+    .stat-card.neutral .sc-value { color: var(--neutral); }
+    .stat-card.unhappy .sc-value { color: var(--unhappy); }
+    .stat-card.total   .sc-value { color: var(--primary); }
+    .stat-card.happy   .sc-bar-fill { background: var(--happy); }
+    .stat-card.neutral .sc-bar-fill { background: var(--neutral); }
+    .stat-card.unhappy .sc-bar-fill { background: var(--unhappy); }
+    .stat-card.total   .sc-bar-fill { background: var(--primary); }
+
+    /* ── Panels ── */
+    .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    @media (max-width: 680px) { .panels { grid-template-columns: 1fr; } }
+
+    .panel {
+      background: var(--card); border-radius: var(--radius);
+      box-shadow: var(--shadow); padding: 20px;
+    }
+    .panel h2 { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--text); }
+
+    /* Chart */
+    .chart-wrap { position: relative; height: 200px; }
+
+    /* Recent list */
+    .recent-list { display: flex; flex-direction: column; gap: 10px; max-height: 320px; overflow-y: auto; }
+    .recent-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px; border: 1px solid var(--border); border-radius: 10px;
+    }
+    .recent-emoji { font-size: 26px; flex-shrink: 0; }
+    .recent-info  { flex: 1; min-width: 0; }
+    .recent-comment { font-size: 13px; color: var(--text); margin-bottom: 3px; word-break: break-word; }
+    .recent-meta    { font-size: 11px; color: var(--muted); }
+    .mood-badge {
+      display: inline-block; padding: 2px 8px; border-radius: 99px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+    }
+    .mood-badge.happy   { background: #dcfce7; color: var(--happy); }
+    .mood-badge.neutral { background: #fef3c7; color: var(--neutral); }
+    .mood-badge.unhappy { background: #fee2e2; color: var(--unhappy); }
+
+    /* ── States ── */
+    .loading-state, .empty-state {
+      text-align: center; padding: 48px 24px; color: var(--muted); font-size: 14px;
+    }
+    .loading-state .spinner, .empty-state .icon { font-size: 36px; margin-bottom: 12px; display: block; }
+
+    .spinner-inline {
+      display: inline-block; width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
+      border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════ AUTH SCREEN ═══════════════════ -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="logo">📊</div>
+    <h1>Dashboard Login</h1>
+    <p class="sub">Sign in to view your store's mood data</p>
+
+    <div class="auth-error" id="auth-error"></div>
+
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input type="email" id="email" placeholder="owner@example.com" autocomplete="email" />
+    </div>
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
+    </div>
+    <button class="auth-btn" id="login-btn" onclick="handleLogin()">Sign In</button>
+  </div>
+</div>
+
+<!-- ═══════════════════ APP SCREEN ═══════════════════ -->
+<div id="app-screen">
+  <header>
+    <div class="header-left">
+      <span class="header-logo">📊</span>
+      <div>
+        <div class="header-title">Mood Meter</div>
+        <div class="header-store" id="header-store">Loading…</div>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="handleLogout()">Sign Out</button>
+  </header>
+
+  <main>
+    <!-- Filter -->
+    <div class="filter-bar">
+      <button class="filter-btn active" data-range="today"     onclick="setRange('today')">Today</button>
+      <button class="filter-btn"        data-range="yesterday" onclick="setRange('yesterday')">Yesterday</button>
+      <button class="filter-btn"        data-range="7days"     onclick="setRange('7days')">Last 7 Days</button>
+      <button class="filter-btn"        data-range="30days"    onclick="setRange('30days')">Last 30 Days</button>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="stats-grid">
+      <div class="stat-card total">
+        <div class="sc-label">Total Responses</div>
+        <div class="sc-value" id="stat-total">–</div>
+        <div class="sc-pct"  id="stat-period">–</div>
+        <div class="sc-bar"><div class="sc-bar-fill" id="bar-total" style="width:100%"></div></div>
+      </div>
+      <div class="stat-card happy">
+        <div class="sc-label">😊 Happy</div>
+        <div class="sc-value" id="stat-happy">–</div>
+        <div class="sc-pct"  id="pct-happy">–</div>
+        <div class="sc-bar"><div class="sc-bar-fill" id="bar-happy" style="width:0%"></div></div>
+      </div>
+      <div class="stat-card neutral">
+        <div class="sc-label">😐 Neutral</div>
+        <div class="sc-value" id="stat-neutral">–</div>
+        <div class="sc-pct"  id="pct-neutral">–</div>
+        <div class="sc-bar"><div class="sc-bar-fill" id="bar-neutral" style="width:0%"></div></div>
+      </div>
+      <div class="stat-card unhappy">
+        <div class="sc-label">😠 Unhappy</div>
+        <div class="sc-value" id="stat-unhappy">–</div>
+        <div class="sc-pct"  id="pct-unhappy">–</div>
+        <div class="sc-bar"><div class="sc-bar-fill" id="bar-unhappy" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <!-- Panels -->
+    <div class="panels">
+      <div class="panel">
+        <h2>📈 Mood by Hour</h2>
+        <div class="chart-wrap"><canvas id="hourly-chart"></canvas></div>
+      </div>
+      <div class="panel">
+        <h2>🕐 Recent Feedback</h2>
+        <div id="recent-list" class="recent-list">
+          <div class="loading-state"><span class="spinner">⏳</span>Loading feedback…</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Firebase 10 Modular SDK -->
+<script type="module">
+  import { initializeApp }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  import { getFirestore, collection, query, where, orderBy, limit, getDocs, doc, getDoc, Timestamp }
+    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  /* ─────────────────────────────────────────────
+     🔧 REPLACE WITH YOUR FIREBASE CONFIG
+  ───────────────────────────────────────────── */
+  const firebaseConfig = {
+    apiKey:            "YOUR_API_KEY",
+    authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId:         "YOUR_PROJECT_ID",
+    storageBucket:     "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId:             "YOUR_APP_ID"
+  };
+  /* ─────────────────────────────────────────── */
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  let currentUser  = null;
+  let currentStore = null; // { storeId, storeName, mallName }
+  let activeRange  = 'today';
+  let hourlyChart  = null;
+
+  window.handleLogin  = handleLogin;
+  window.handleLogout = handleLogout;
+  window.setRange     = setRange;
+
+  // ── Auth state ──
+  onAuthStateChanged(auth, async user => {
+    if (user) {
+      currentUser = user;
+      await loadStoreForUser(user.uid);
+      showApp();
+      loadDashboard();
+    } else {
+      currentUser = null;
+      currentStore = null;
+      showAuth();
+    }
+  });
+
+  // ── Load associated store ──
+  async function loadStoreForUser(uid) {
+    // Query stores collection for this owner's UID
+    try {
+      const q   = query(collection(db, 'stores'), where('ownerId', '==', uid));
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        const d = snap.docs[0];
+        currentStore = { storeId: d.id, ...d.data() };
+      } else {
+        currentStore = null;
+      }
+    } catch (e) {
+      console.error('Failed to load store:', e);
+      currentStore = null;
+    }
+    document.getElementById('header-store').textContent =
+      currentStore ? `${currentStore.storeName} · ${currentStore.mallName || ''}` : 'No store assigned';
+  }
+
+  // ── Login ──
+  async function handleLogin() {
+    const email    = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const btn      = document.getElementById('login-btn');
+    const errEl    = document.getElementById('auth-error');
+
+    errEl.style.display = 'none';
+    if (!email || !password) { showAuthError('Please enter email and password.'); return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-inline"></span>Signing in…';
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      // onAuthStateChanged handles the rest
+    } catch (err) {
+      let msg = 'Login failed. Please check your credentials.';
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential')
+        msg = 'Invalid email or password.';
+      if (err.code === 'auth/too-many-requests')
+        msg = 'Too many attempts. Please wait a few minutes.';
+      showAuthError(msg);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = 'Sign In';
+    }
+  }
+
+  async function handleLogout() {
+    await signOut(auth);
+  }
+
+  function showAuthError(msg) {
+    const el = document.getElementById('auth-error');
+    el.textContent  = msg;
+    el.style.display = 'block';
+  }
+
+  // ── Range filter ──
+  function setRange(range) {
+    activeRange = range;
+    document.querySelectorAll('.filter-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.range === range);
+    });
+    loadDashboard();
+  }
+
+  // ── Date range helpers ──
+  function getRangeBounds(range) {
+    const now   = new Date();
+    const start = new Date(now);
+    switch (range) {
+      case 'today':
+        start.setHours(0, 0, 0, 0);
+        break;
+      case 'yesterday':
+        start.setDate(start.getDate() - 1);
+        start.setHours(0, 0, 0, 0);
+        const endY = new Date(start);
+        endY.setHours(23, 59, 59, 999);
+        return { start: Timestamp.fromDate(start), end: Timestamp.fromDate(endY) };
+      case '7days':
+        start.setDate(start.getDate() - 7);
+        start.setHours(0, 0, 0, 0);
+        break;
+      case '30days':
+        start.setDate(start.getDate() - 30);
+        start.setHours(0, 0, 0, 0);
+        break;
+    }
+    return { start: Timestamp.fromDate(start), end: Timestamp.fromDate(now) };
+  }
+
+  function rangeLabel(range) {
+    return { today: 'Today', yesterday: 'Yesterday', '7days': 'Last 7 Days', '30days': 'Last 30 Days' }[range];
+  }
+
+  // ── Load dashboard data ──
+  async function loadDashboard() {
+    if (!currentStore) {
+      setStatsEmpty();
+      document.getElementById('recent-list').innerHTML =
+        '<div class="empty-state"><span class="icon">🏪</span>No store assigned to your account. Contact admin.</div>';
+      return;
+    }
+
+    const { start, end } = getRangeBounds(activeRange);
+
+    // Fetch moods in range for this store
+    let moods = [];
+    try {
+      const q    = query(
+        collection(db, 'moods'),
+        where('storeId',   '==', currentStore.storeId),
+        where('timestamp', '>=', start),
+        where('timestamp', '<=', end),
+        orderBy('timestamp', 'desc'),
+        limit(500)
+      );
+      const snap = await getDocs(q);
+      moods = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (e) {
+      console.error('Firestore query error:', e);
+    }
+
+    renderStats(moods);
+    renderHourlyChart(moods);
+    renderRecentList(moods.slice(0, 50));
+  }
+
+  // ── Stats ──
+  function renderStats(moods) {
+    const total   = moods.length;
+    const happy   = moods.filter(m => m.mood === 'happy').length;
+    const neutral = moods.filter(m => m.mood === 'neutral').length;
+    const unhappy = moods.filter(m => m.mood === 'unhappy').length;
+    const pct     = n => total ? Math.round((n / total) * 100) : 0;
+
+    document.getElementById('stat-total').textContent   = total;
+    document.getElementById('stat-happy').textContent   = happy;
+    document.getElementById('stat-neutral').textContent = neutral;
+    document.getElementById('stat-unhappy').textContent = unhappy;
+    document.getElementById('stat-period').textContent  = rangeLabel(activeRange);
+    document.getElementById('pct-happy').textContent    = `${pct(happy)}% of responses`;
+    document.getElementById('pct-neutral').textContent  = `${pct(neutral)}% of responses`;
+    document.getElementById('pct-unhappy').textContent  = `${pct(unhappy)}% of responses`;
+
+    document.getElementById('bar-happy').style.width   = `${pct(happy)}%`;
+    document.getElementById('bar-neutral').style.width = `${pct(neutral)}%`;
+    document.getElementById('bar-unhappy').style.width = `${pct(unhappy)}%`;
+  }
+
+  function setStatsEmpty() {
+    ['stat-total','stat-happy','stat-neutral','stat-unhappy'].forEach(id =>
+      document.getElementById(id).textContent = '–');
+  }
+
+  // ── Hourly chart ──
+  function renderHourlyChart(moods) {
+    const hours    = Array.from({ length: 24 }, (_, i) => i);
+    const happyArr   = Array(24).fill(0);
+    const neutralArr = Array(24).fill(0);
+    const unhappyArr = Array(24).fill(0);
+
+    moods.forEach(m => {
+      if (!m.timestamp) return;
+      const h = m.timestamp.toDate().getHours();
+      if (m.mood === 'happy')   happyArr[h]++;
+      if (m.mood === 'neutral') neutralArr[h]++;
+      if (m.mood === 'unhappy') unhappyArr[h]++;
+    });
+
+    const labels = hours.map(h => {
+      const suffix = h < 12 ? 'am' : 'pm';
+      const label  = h === 0 ? 12 : h > 12 ? h - 12 : h;
+      return `${label}${suffix}`;
+    });
+
+    const ctx = document.getElementById('hourly-chart').getContext('2d');
+    if (hourlyChart) hourlyChart.destroy();
+
+    hourlyChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Happy',   data: happyArr,   backgroundColor: '#bbf7d0', borderColor: '#16a34a', borderWidth: 1.5, borderRadius: 4 },
+          { label: 'Neutral', data: neutralArr, backgroundColor: '#fde68a', borderColor: '#d97706', borderWidth: 1.5, borderRadius: 4 },
+          { label: 'Unhappy', data: unhappyArr, backgroundColor: '#fecaca', borderColor: '#dc2626', borderWidth: 1.5, borderRadius: 4 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12 } } },
+        scales: {
+          x: { stacked: true, ticks: { font: { size: 9 }, maxRotation: 45 }, grid: { display: false } },
+          y: { stacked: true, beginAtZero: true, ticks: { font: { size: 11 }, stepSize: 1 } }
+        }
+      }
+    });
+  }
+
+  // ── Recent list ──
+  function renderRecentList(moods) {
+    const el = document.getElementById('recent-list');
+    if (!moods.length) {
+      el.innerHTML = '<div class="empty-state"><span class="icon">📭</span>No feedback in this period.</div>';
+      return;
+    }
+
+    const emojiMap = { happy: '😊', neutral: '😐', unhappy: '😠' };
+
+    el.innerHTML = moods.map(m => {
+      const ts = m.timestamp ? m.timestamp.toDate() : new Date();
+      return `
+        <div class="recent-item">
+          <div class="recent-emoji">${emojiMap[m.mood] || '❓'}</div>
+          <div class="recent-info">
+            <div class="recent-comment">${m.comment ? escHtml(m.comment) : '<em style="color:var(--muted)">No comment</em>'}</div>
+            <div class="recent-meta">
+              <span class="mood-badge ${m.mood}">${m.mood}</span>
+              &nbsp;${formatTime(ts)}
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Helpers ──
+  function showApp()  { document.getElementById('auth-screen').style.display = 'none'; document.getElementById('app-screen').style.display = 'block'; }
+  function showAuth() { document.getElementById('auth-screen').style.display = 'flex'; document.getElementById('app-screen').style.display = 'none'; }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function formatTime(date) {
+    return date.toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit', hour12:true });
+  }
+
+  // Allow Enter key on password
+  document.getElementById('password').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleLogin();
+  });
+</script>
+</body>
+</html>

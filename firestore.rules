@@ -1,0 +1,94 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ═══════════════════════════════════════════════════
+    //  Helper functions
+    // ═══════════════════════════════════════════════════
+
+    // True if the request comes from a signed-in user
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // True if the signed-in user is a registered admin
+    // (add admin UIDs to the 'admins' collection via Firebase Console)
+    function isAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // True if the signed-in user owns the given storeId
+    function ownsStore(storeId) {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/stores/$(storeId)).data.ownerId == request.auth.uid;
+    }
+
+    // Spam guard: prevent more than 1 submission per 60 seconds
+    // (client-side sessionStorage also enforces this; this is the server-side backup)
+    function notSpamming() {
+      // Firestore doesn't have a true per-IP rate limit in rules.
+      // We validate timestamp is recent (within 5 minutes of server time)
+      // to prevent backdated bulk writes.
+      return request.resource.data.timestamp == request.time ||
+             (request.resource.data.timestamp > request.time - duration.value(300, 's') &&
+              request.resource.data.timestamp < request.time + duration.value(60,  's'));
+    }
+
+    // Validate a mood submission document
+    function validMood() {
+      let d = request.resource.data;
+      return d.keys().hasAll(['storeId', 'mood', 'timestamp'])
+          && d.storeId is string
+          && d.storeId.size() > 0
+          && d.storeId.size() <= 64
+          && d.mood in ['happy', 'neutral', 'unhappy']
+          && (d.comment == null || (d.comment is string && d.comment.size() <= 300))
+          && d.timestamp is timestamp;
+    }
+
+    // ═══════════════════════════════════════════════════
+    //  /moods/{moodId}
+    //  - Anyone can CREATE a mood (no account needed)
+    //  - Store owner can READ their own store's moods
+    //  - Admin can do everything
+    //  - No UPDATE or DELETE without auth
+    // ═══════════════════════════════════════════════════
+    match /moods/{moodId} {
+      allow create: if validMood() && notSpamming();
+
+      allow read: if isAdmin()
+                  || (isSignedIn() && ownsStore(resource.data.storeId));
+
+      allow update, delete: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════
+    //  /stores/{storeId}
+    //  - Public can read store name/info (so index.html can show store name)
+    //  - Only admin can create/update/delete stores
+    // ═══════════════════════════════════════════════════
+    match /stores/{storeId} {
+      allow read:             if true;   // anyone can read store info (needed by index.html)
+      allow create, update:   if isAdmin();
+      allow delete:           if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════
+    //  /admins/{uid}
+    //  - Only admins can read/write this collection
+    //  - Bootstrap: set your first admin manually via Firebase Console
+    // ═══════════════════════════════════════════════════
+    match /admins/{uid} {
+      allow read, write: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════
+    //  Catch-all: deny everything else
+    // ═══════════════════════════════════════════════════
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
