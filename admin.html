@@ -3,169 +3,192 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mall Mood Meter – Admin</title>
+  <title>Satisfaction Meter – Admin</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --primary:  #4f46e5; --primary-dark: #3730a3; --primary-light: #eef2ff;
-      --danger:   #dc2626; --danger-light: #fef2f2;
-      --success:  #16a34a; --success-light: #f0fdf4;
-      --happy:    #16a34a; --neutral: #d97706; --unhappy: #dc2626;
-      --bg:       #f1f5f9; --card: #ffffff; --text: #1e293b;
-      --muted:    #64748b; --border: #e2e8f0;
-      --radius:   14px;    --shadow: 0 2px 12px rgba(0,0,0,.07);
+      --primary:       #4f46e5; --primary-dark: #3730a3; --primary-light: #eef2ff;
+      --danger:        #dc2626; --danger-light:  #fef2f2;
+      --success:       #16a34a; --success-light: #f0fdf4;
+      --happy:         #16a34a; --neutral: #d97706; --unhappy: #dc2626;
+      --bg:            #f1f5f9; --card: #ffffff; --text: #1e293b;
+      --muted:         #64748b; --border: #e2e8f0;
+      --radius:        16px;
+      --shadow:        0 2px 16px rgba(0,0,0,.07), 0 1px 4px rgba(0,0,0,.04);
+      --shadow-hover:  0 8px 28px rgba(79,70,229,.13);
     }
 
     body { background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: var(--text); }
 
     /* ── Auth ── */
     #auth-screen {
-      min-height: 100dvh; background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+      min-height: 100dvh;
+      background: linear-gradient(135deg, #1e1b4b 0%, #3730a3 50%, #4f46e5 100%);
       display: flex; align-items: center; justify-content: center; padding: 20px;
     }
     .auth-card {
-      background: #fff; border-radius: 20px; padding: 40px 32px;
-      width: 100%; max-width: 380px; box-shadow: 0 12px 40px rgba(0,0,0,.25); text-align: center;
+      background: #fff; border-radius: 22px; padding: 44px 36px;
+      width: 100%; max-width: 390px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.28);
+      text-align: center; position: relative; overflow: hidden;
     }
-    .auth-card .logo { font-size: 44px; margin-bottom: 12px; }
-    .auth-card h1  { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
-    .auth-card .sub { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+    .auth-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, #4f46e5, #7c3aed, #a855f7);
+    }
+    .auth-card .logo { font-size: 46px; margin-bottom: 14px; }
+    .auth-card h1  { font-size: 23px; font-weight: 800; margin-bottom: 4px; }
+    .auth-card .sub { font-size: 13px; color: var(--muted); margin-bottom: 30px; }
+
     .form-group { text-align: left; margin-bottom: 16px; }
     .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
     .form-group input {
-      width: 100%; padding: 11px 13px; border: 1.5px solid var(--border);
-      border-radius: 10px; font-size: 14px; font-family: inherit; outline: none; transition: border-color .18s;
+      width: 100%; padding: 12px 14px; border: 1.5px solid var(--border);
+      border-radius: 11px; font-size: 14px; font-family: inherit;
+      outline: none; transition: border-color .18s, box-shadow .18s;
     }
-    .form-group input:focus { border-color: var(--primary); }
+    .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,.1); }
+
     .auth-btn {
-      width: 100%; padding: 13px; border: none; border-radius: 10px;
-      background: var(--primary); color: #fff; font-size: 15px; font-weight: 700;
-      cursor: pointer; transition: background .18s; margin-top: 4px;
+      width: 100%; padding: 13px; border: none; border-radius: 12px;
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      color: #fff; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: opacity .18s, transform .15s;
+      margin-top: 4px; box-shadow: 0 4px 14px rgba(79,70,229,.35);
     }
-    .auth-btn:hover { background: var(--primary-dark); }
+    .auth-btn:hover { opacity: .9; transform: translateY(-1px); }
     .auth-error {
-      background: var(--danger-light); border: 1px solid #fecaca; border-radius: 8px;
-      padding: 10px 13px; color: var(--danger); font-size: 13px; margin-bottom: 14px; display: none; text-align: left;
+      background: var(--danger-light); border: 1px solid #fecaca; border-radius: 9px;
+      padding: 10px 13px; color: var(--danger); font-size: 13px; font-weight: 500;
+      margin-bottom: 14px; display: none; text-align: left;
     }
 
     /* ── App ── */
     #app-screen { display: none; min-height: 100dvh; }
 
     header {
-      position: sticky; top: 0; z-index: 100; background: #1e1b4b;
-      height: 60px; display: flex; align-items: center; justify-content: space-between;
-      padding: 0 20px;
+      position: sticky; top: 0; z-index: 100;
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+      height: 64px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; box-shadow: 0 2px 12px rgba(0,0,0,.2);
     }
-    .header-brand { display: flex; align-items: center; gap: 10px; color: #fff; }
-    .header-brand .icon { font-size: 22px; }
+    .header-brand { display: flex; align-items: center; gap: 12px; color: #fff; }
+    .header-brand .icon-wrap {
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,.12);
+      border-radius: 10px; display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
     .header-brand .title { font-size: 15px; font-weight: 800; }
     .header-brand .badge {
       font-size: 10px; font-weight: 700; background: #fbbf24; color: #1e1b4b;
-      padding: 2px 8px; border-radius: 99px; text-transform: uppercase;
+      padding: 2px 9px; border-radius: 99px; text-transform: uppercase; letter-spacing: .06em;
     }
     .logout-btn {
-      padding: 7px 16px; border: 1.5px solid rgba(255,255,255,.3); border-radius: 8px;
-      background: transparent; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer;
+      padding: 8px 18px; border: 1.5px solid rgba(255,255,255,.25); border-radius: 9px;
+      background: transparent; color: #fff; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: background .15s, border-color .15s;
     }
-    .logout-btn:hover { background: rgba(255,255,255,.1); }
+    .logout-btn:hover { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.5); }
 
     /* ── Tabs ── */
     .tab-bar {
       background: #fff; border-bottom: 1px solid var(--border);
-      display: flex; gap: 0; padding: 0 20px;
+      display: flex; gap: 0; padding: 0 24px;
     }
     .tab {
-      padding: 14px 18px; font-size: 14px; font-weight: 600; color: var(--muted);
-      cursor: pointer; border-bottom: 3px solid transparent; transition: color .15s, border-color .15s;
+      padding: 15px 20px; font-size: 14px; font-weight: 600; color: var(--muted);
+      cursor: pointer; border-bottom: 3px solid transparent;
+      transition: color .15s, border-color .15s;
     }
     .tab:hover  { color: var(--primary); }
     .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
 
-    main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
+    main { max-width: 1120px; margin: 0 auto; padding: 28px 18px 56px; }
 
-    /* ── Section titles ── */
     .section-header {
       display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 18px; flex-wrap: wrap; gap: 10px;
+      margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
     }
-    .section-header h2 { font-size: 18px; font-weight: 700; }
+    .section-header h2 { font-size: 19px; font-weight: 800; }
 
     /* ── Buttons ── */
     .btn {
-      padding: 9px 18px; border-radius: 9px; font-size: 13px; font-weight: 700;
-      cursor: pointer; border: none; transition: opacity .15s, transform .1s;
+      padding: 9px 20px; border-radius: 10px; font-size: 13px; font-weight: 700;
+      cursor: pointer; border: none; transition: opacity .15s, transform .12s, box-shadow .15s;
     }
     .btn:active { transform: scale(.97); }
-    .btn-primary { background: var(--primary); color: #fff; }
-    .btn-primary:hover { opacity: .88; }
-    .btn-danger  { background: var(--danger);  color: #fff; }
+    .btn-primary { background: linear-gradient(135deg,#4f46e5,#7c3aed); color: #fff; box-shadow: 0 3px 10px rgba(79,70,229,.3); }
+    .btn-primary:hover { opacity: .9; box-shadow: 0 5px 16px rgba(79,70,229,.38); }
+    .btn-danger  { background: var(--danger); color: #fff; box-shadow: 0 3px 10px rgba(220,38,38,.25); }
     .btn-danger:hover  { opacity: .88; }
-    .btn-outline {
-      background: #fff; border: 1.5px solid var(--border); color: var(--text);
-    }
-    .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
-    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-outline { background: #fff; border: 1.5px solid var(--border); color: var(--text); }
+    .btn-outline:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
 
-    /* ── Add-store form ── */
+    /* ── Add store form ── */
     .add-store-form {
-      background: var(--card); border-radius: var(--radius); padding: 24px;
-      box-shadow: var(--shadow); margin-bottom: 24px;
+      background: var(--card); border-radius: var(--radius); padding: 26px;
+      box-shadow: var(--shadow); margin-bottom: 26px;
+      border: 1px solid transparent; transition: box-shadow .2s;
     }
-    .add-store-form h3 { font-size: 15px; font-weight: 700; margin-bottom: 18px; }
-    .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 16px; }
-    .form-field label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing:.05em; }
+    .add-store-form:hover { box-shadow: var(--shadow-hover); }
+    .add-store-form h3 { font-size: 15px; font-weight: 800; margin-bottom: 20px; }
+    .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 18px; }
+    .form-field label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing:.06em; }
     .form-field input {
-      width: 100%; padding: 9px 12px; border: 1.5px solid var(--border);
-      border-radius: 9px; font-size: 14px; font-family: inherit; outline: none; transition: border-color .18s;
+      width: 100%; padding: 10px 12px; border: 1.5px solid var(--border);
+      border-radius: 10px; font-size: 14px; font-family: inherit;
+      outline: none; transition: border-color .18s, box-shadow .18s;
     }
-    .form-field input:focus { border-color: var(--primary); }
+    .form-field input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,.08); }
 
     .form-msg {
-      display: none; padding: 10px 13px; border-radius: 8px;
-      font-size: 13px; font-weight: 500; margin-top: 12px;
+      display: none; padding: 11px 14px; border-radius: 9px;
+      font-size: 13px; font-weight: 500; margin-top: 14px;
     }
-    .form-msg.success { background: var(--success-light); color: var(--success); display: block; }
-    .form-msg.error   { background: var(--danger-light);  color: var(--danger);  display: block; }
+    .form-msg.success { background: var(--success-light); border:1px solid #bbf7d0; color: var(--success); display: block; }
+    .form-msg.error   { background: var(--danger-light);  border:1px solid #fecaca; color: var(--danger);  display: block; }
 
-    /* ── Stores table ── */
+    /* ── Table ── */
     .table-wrap { overflow-x: auto; background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); }
     table { width: 100%; border-collapse: collapse; }
     thead th {
-      background: var(--bg); padding: 12px 16px; text-align: left;
-      font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase;
-      letter-spacing: .06em; border-bottom: 1px solid var(--border);
+      background: var(--bg); padding: 13px 18px; text-align: left;
+      font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase;
+      letter-spacing: .07em; border-bottom: 1px solid var(--border);
     }
-    tbody tr { border-bottom: 1px solid var(--border); }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .12s; }
     tbody tr:last-child { border-bottom: none; }
     tbody tr:hover { background: #fafafa; }
-    tbody td { padding: 14px 16px; font-size: 14px; vertical-align: middle; }
+    tbody td { padding: 15px 18px; font-size: 14px; vertical-align: middle; }
     .store-id-badge {
       display: inline-block; background: var(--primary-light); color: var(--primary);
-      padding: 3px 9px; border-radius: 6px; font-size: 12px; font-weight: 700; font-family: monospace;
+      padding: 3px 10px; border-radius: 7px; font-size: 12px; font-weight: 700; font-family: monospace;
     }
-    .mood-pills { display: flex; gap: 5px; flex-wrap: wrap; }
-    .pill {
-      padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 700;
-    }
+    .mood-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+    .pill { padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; }
     .pill.happy   { background: #dcfce7; color: var(--happy); }
     .pill.neutral { background: #fef3c7; color: var(--neutral); }
     .pill.unhappy { background: #fee2e2; color: var(--unhappy); }
 
-    .action-btns { display: flex; gap: 6px; }
-    .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 7px; }
+    .action-btns { display: flex; gap: 7px; }
+    .btn-sm { padding: 6px 13px; font-size: 12px; border-radius: 8px; }
 
-    /* ── Overview tab ── */
-    .overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    /* ── Overview ── */
+    .overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 26px; }
     .ov-card {
-      background: var(--card); border-radius: var(--radius); padding: 20px;
+      background: var(--card); border-radius: var(--radius); padding: 24px;
       box-shadow: var(--shadow); text-align: center;
+      transition: box-shadow .2s, transform .2s;
     }
-    .ov-card .ov-icon { font-size: 32px; margin-bottom: 8px; }
-    .ov-card .ov-val  { font-size: 30px; font-weight: 800; color: var(--primary); }
-    .ov-card .ov-lbl  { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .ov-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+    .ov-card .ov-icon { font-size: 34px; margin-bottom: 10px; }
+    .ov-card .ov-val  { font-size: 32px; font-weight: 900; color: var(--primary); }
+    .ov-card .ov-lbl  { font-size: 13px; color: var(--muted); margin-top: 3px; font-weight: 500; }
 
-    /* ── Spinner ── */
+    /* ── Spinner / empty ── */
     .spinner-inline {
       display: inline-block; width: 15px; height: 15px;
       border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
@@ -173,7 +196,7 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .empty-state { text-align: center; padding: 40px; color: var(--muted); font-size: 14px; }
+    .empty-state { text-align: center; padding: 44px; color: var(--muted); font-size: 14px; }
     .empty-state .icon { font-size: 36px; margin-bottom: 10px; display: block; }
 
     .tab-content { display: none; }
@@ -182,16 +205,17 @@
     /* ── Modal ── */
     .modal-overlay {
       display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,.5); z-index: 200;
+      background: rgba(0,0,0,.55); z-index: 200;
       align-items: center; justify-content: center; padding: 20px;
+      backdrop-filter: blur(4px);
     }
     .modal-overlay.open { display: flex; }
     .modal-box {
-      background: #fff; border-radius: var(--radius); padding: 28px;
-      max-width: 400px; width: 100%; box-shadow: 0 12px 40px rgba(0,0,0,.2);
+      background: #fff; border-radius: var(--radius); padding: 30px;
+      max-width: 400px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,.22);
     }
-    .modal-box h3 { font-size: 17px; font-weight: 700; margin-bottom: 10px; }
-    .modal-box p  { font-size: 14px; color: var(--muted); margin-bottom: 20px; }
+    .modal-box h3 { font-size: 17px; font-weight: 800; margin-bottom: 10px; }
+    .modal-box p  { font-size: 14px; color: var(--muted); margin-bottom: 22px; line-height: 1.6; }
     .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
   </style>
 </head>
@@ -213,11 +237,8 @@
       <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
     </div>
     <button class="auth-btn" id="login-btn" onclick="handleLogin()">Sign In as Admin</button>
-
-    <div style="margin: 20px 0 12px; border-top: 1px solid var(--border);"></div>
-
-    <!-- Google Sign-In -->
-    <button id="google-signin-btn" class="auth-btn" style="background-color:#db4437;">
+    <div style="margin:20px 0 12px;border-top:1px solid var(--border);"></div>
+    <button id="google-signin-btn" class="auth-btn" style="background:linear-gradient(135deg,#db4437,#c53929);">
       Sign in with Google
     </button>
   </div>
@@ -227,8 +248,8 @@
 <div id="app-screen">
   <header>
     <div class="header-brand">
-      <span class="icon">🛡️</span>
-      <span class="title">Mood Meter Admin</span>
+      <div class="icon-wrap">🛡️</div>
+      <span class="title">Satisfaction Meter Admin</span>
       <span class="badge">Admin</span>
     </div>
     <button class="logout-btn" onclick="handleLogout()">Sign Out</button>
@@ -242,7 +263,7 @@
 
   <main>
 
-    <!-- ── Overview tab ── -->
+    <!-- ── Overview ── -->
     <div id="tab-overview" class="tab-content active">
       <div class="overview-grid">
         <div class="ov-card"><div class="ov-icon">🏪</div><div class="ov-val" id="ov-stores">–</div><div class="ov-lbl">Total Stores</div></div>
@@ -254,7 +275,7 @@
       <div id="ov-loading" class="empty-state"><span class="icon">⏳</span>Loading overview…</div>
     </div>
 
-    <!-- ── Stores tab ── -->
+    <!-- ── Stores ── -->
     <div id="tab-stores" class="tab-content">
       <div class="add-store-form">
         <h3>➕ Add New Store</h3>
@@ -277,12 +298,8 @@
         <table>
           <thead>
             <tr>
-              <th>Store ID</th>
-              <th>Store Name</th>
-              <th>Mall</th>
-              <th>Owner Email</th>
-              <th>Mood Counts</th>
-              <th>Actions</th>
+              <th>Store ID</th><th>Store Name</th><th>Mall</th>
+              <th>Owner Email</th><th>Responses</th><th>Actions</th>
             </tr>
           </thead>
           <tbody id="stores-tbody">
@@ -292,7 +309,7 @@
       </div>
     </div>
 
-    <!-- ── Feedback tab ── -->
+    <!-- ── Feedback ── -->
     <div id="tab-feedback" class="tab-content">
       <div class="section-header">
         <h2>All Feedback</h2>
@@ -301,12 +318,7 @@
       <div class="table-wrap">
         <table>
           <thead>
-            <tr>
-              <th>Store</th>
-              <th>Mood</th>
-              <th>Comment</th>
-              <th>Time</th>
-            </tr>
+            <tr><th>Store</th><th>Mood</th><th>Comment</th><th>Time</th></tr>
           </thead>
           <tbody id="feedback-tbody">
             <tr><td colspan="4" class="empty-state">Loading feedback…</td></tr>
@@ -337,12 +349,9 @@
     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
   import {
     getFirestore, collection, query, where, orderBy, limit,
-    getDocs, getDoc, doc, setDoc, deleteDoc, serverTimestamp, Timestamp
+    getDocs, getDoc, doc, setDoc, deleteDoc, serverTimestamp
   } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-  /* ─────────────────────────────────────────────
-     🔧 REPLACE WITH YOUR FIREBASE CONFIG
-  ───────────────────────────────────────────── */
   const firebaseConfig = {
     apiKey: "AIzaSyA9kH3rpz8Zaf40lXd_SGhiKlkk2oiMCVo",
     authDomain: "mall-mood-meter.firebaseapp.com",
@@ -353,51 +362,38 @@
     measurementId: "G-J9L41YFQML"
   };
 
-  /* ── Admin UIDs – add your admin Firebase UID here ── */
   const ADMIN_UIDS = ["YOUR_ADMIN_FIREBASE_UID"];
-  /* ─────────────────────────────────────────── */
 
   const app  = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db   = getFirestore(app);
 
-  let currentUser  = null;
-  let activeTab    = 'overview';
+  let currentUser   = null;
+  let activeTab     = 'overview';
   let pendingDelete = null;
 
-  window.handleLogin      = handleLogin;
-  window.handleLogout     = handleLogout;
-  window.switchTab        = switchTab;
-  window.addStore         = addStore;
-  window.deleteStore      = deleteStore;
-  window.closeModal       = closeModal;
-  window.loadStores       = loadStores;
-  window.loadAllFeedback  = loadAllFeedback;
-  window.resetStoreData   = resetStoreData;
+  window.handleLogin     = handleLogin;
+  window.handleLogout    = handleLogout;
+  window.switchTab       = switchTab;
+  window.addStore        = addStore;
+  window.deleteStore     = deleteStore;
+  window.closeModal      = closeModal;
+  window.loadStores      = loadStores;
+  window.loadAllFeedback = loadAllFeedback;
+  window.resetStoreData  = resetStoreData;
 
-  // Google Sign-In
   window.handleGoogleSignIn = async function() {
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (err) {
-      console.error(err);
-      showAuthError('Google sign-in failed: ' + err.message);
-    }
+    try { await signInWithPopup(auth, new GoogleAuthProvider()); }
+    catch(err) { showAuthError('Google sign-in failed: ' + err.message); }
   };
 
   onAuthStateChanged(auth, user => {
     if (user && ADMIN_UIDS.includes(user.uid)) {
-      currentUser = user;
-      showApp();
-      loadOverview();
+      currentUser = user; showApp(); loadOverview();
     } else if (user) {
-      signOut(auth);
-      showAuth();
-      showAuthError('Access denied. You are not an admin.');
+      signOut(auth); showAuth(); showAuthError('Access denied. You are not an admin.');
     } else {
-      currentUser = null;
-      showAuth();
+      currentUser = null; showAuth();
     }
   });
 
@@ -408,79 +404,65 @@
     document.getElementById('auth-error').style.display = 'none';
     if (!email || !pass) { showAuthError('Enter email and password.'); return; }
     btn.disabled = true; btn.textContent = 'Signing in…';
-    try {
-      await signInWithEmailAndPassword(auth, email, pass);
-    } catch (e) {
-      showAuthError('Invalid credentials or access denied.');
-      btn.disabled = false; btn.textContent = 'Sign In as Admin';
-    }
+    try { await signInWithEmailAndPassword(auth, email, pass); }
+    catch(e) { showAuthError('Invalid credentials or access denied.'); btn.disabled = false; btn.textContent = 'Sign In as Admin'; }
   }
 
   async function handleLogout() { await signOut(auth); }
 
-  function showAuthError(msg) {
-    const el = document.getElementById('auth-error');
-    el.textContent = msg; el.style.display = 'block';
-  }
-
-  function showApp()  { document.getElementById('auth-screen').style.display = 'none'; document.getElementById('app-screen').style.display = 'block'; }
-  function showAuth() { document.getElementById('auth-screen').style.display = 'flex'; document.getElementById('app-screen').style.display = 'none'; }
+  function showAuthError(msg) { const el = document.getElementById('auth-error'); el.textContent = msg; el.style.display = 'block'; }
+  function showApp()  { document.getElementById('auth-screen').style.display='none'; document.getElementById('app-screen').style.display='block'; }
+  function showAuth() { document.getElementById('auth-screen').style.display='flex'; document.getElementById('app-screen').style.display='none'; }
 
   function switchTab(tab) {
     activeTab = tab;
-    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === `tab-${tab}`));
-    if (tab === 'stores')   loadStores();
-    if (tab === 'feedback') loadAllFeedback();
-    if (tab === 'overview') loadOverview();
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab===tab));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id===`tab-${tab}`));
+    if (tab==='stores')   loadStores();
+    if (tab==='feedback') loadAllFeedback();
+    if (tab==='overview') loadOverview();
   }
 
-  // ── Overview ──
   async function loadOverview() {
     try {
-      const storesSnap = await getDocs(collection(db, 'stores'));
-      const moodsSnap  = await getDocs(query(collection(db, 'moods'), orderBy('timestamp','desc'), limit(2000)));
-
+      const storesSnap = await getDocs(collection(db,'stores'));
+      const moodsSnap  = await getDocs(query(collection(db,'moods'), orderBy('timestamp','desc'), limit(2000)));
       const moods = moodsSnap.docs.map(d => d.data());
       document.getElementById('ov-stores').textContent  = storesSnap.size;
       document.getElementById('ov-total').textContent   = moods.length;
-      document.getElementById('ov-happy').textContent   = moods.filter(m => m.mood==='happy').length;
-      document.getElementById('ov-neutral').textContent = moods.filter(m => m.mood==='neutral').length;
-      document.getElementById('ov-unhappy').textContent = moods.filter(m => m.mood==='unhappy').length;
+      document.getElementById('ov-happy').textContent   = moods.filter(m=>m.mood==='happy').length;
+      document.getElementById('ov-neutral').textContent = moods.filter(m=>m.mood==='neutral').length;
+      document.getElementById('ov-unhappy').textContent = moods.filter(m=>m.mood==='unhappy').length;
       document.getElementById('ov-loading').style.display = 'none';
     } catch(e) { console.error(e); }
   }
 
-  // ── Stores ──
   async function loadStores() {
     const tbody = document.getElementById('stores-tbody');
     tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Loading…</td></tr>';
     try {
-      const snap   = await getDocs(collection(db, 'stores'));
-      const stores = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      if (!stores.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No stores yet. Add one above.</td></tr>';
-        return;
-      }
+      const snap   = await getDocs(collection(db,'stores'));
+      const stores = snap.docs.map(d => ({id:d.id,...d.data()}));
+      if (!stores.length) { tbody.innerHTML='<tr><td colspan="6" class="empty-state">No stores yet. Add one above.</td></tr>'; return; }
 
       const moodCountsP = stores.map(s =>
-        getDocs(query(collection(db, 'moods'), where('storeId','==',s.id)))
-          .then(q => ({ id: s.id, docs: q.docs.map(d => d.data()) }))
+        getDocs(query(collection(db,'moods'),where('storeId','==',s.id)))
+          .then(q => ({id:s.id, docs:q.docs.map(d=>d.data())}))
       );
       const moodResults = await Promise.all(moodCountsP);
-      const countsMap = {};
-      moodResults.forEach(r => { countsMap[r.id] = r.docs; });
+      const countsMap   = {};
+      moodResults.forEach(r => { countsMap[r.id]=r.docs; });
 
       tbody.innerHTML = stores.map(s => {
-        const moods   = countsMap[s.id] || [];
-        const happy   = moods.filter(m => m.mood==='happy').length;
-        const neutral = moods.filter(m => m.mood==='neutral').length;
-        const unhappy = moods.filter(m => m.mood==='unhappy').length;
+        const moods   = countsMap[s.id]||[];
+        const happy   = moods.filter(m=>m.mood==='happy').length;
+        const neutral = moods.filter(m=>m.mood==='neutral').length;
+        const unhappy = moods.filter(m=>m.mood==='unhappy').length;
         return `<tr>
           <td><span class="store-id-badge">${escHtml(s.id)}</span></td>
-          <td>${escHtml(s.storeName || '–')}</td>
-          <td>${escHtml(s.mallName  || '–')}</td>
-          <td>${escHtml(s.ownerEmail|| '–')}</td>
+          <td>${escHtml(s.storeName||'–')}</td>
+          <td>${escHtml(s.mallName||'–')}</td>
+          <td>${escHtml(s.ownerEmail||'–')}</td>
           <td>
             <div class="mood-pills">
               <span class="pill happy">😊 ${happy}</span>
@@ -496,93 +478,67 @@
           </td>
         </tr>`;
       }).join('');
-    } catch(e) { console.error(e); tbody.innerHTML = '<tr><td colspan="6">Error loading stores.</td></tr>'; }
+    } catch(e) { console.error(e); tbody.innerHTML='<tr><td colspan="6">Error loading stores.</td></tr>'; }
   }
 
-  // ── Add store ──
   async function addStore() {
-    const storeId   = document.getElementById('f-storeId').value.trim().replace(/\s+/g,'_');
-    const storeName = document.getElementById('f-storeName').value.trim();
-    const mallName  = document.getElementById('f-mallName').value.trim();
-    const ownerEmail= document.getElementById('f-ownerEmail').value.trim();
-    const ownerId   = document.getElementById('f-ownerId').value.trim();
-    const msg       = document.getElementById('add-msg');
-    const btn       = document.getElementById('add-store-btn');
+    const storeId    = document.getElementById('f-storeId').value.trim().replace(/\s+/g,'_');
+    const storeName  = document.getElementById('f-storeName').value.trim();
+    const mallName   = document.getElementById('f-mallName').value.trim();
+    const ownerEmail = document.getElementById('f-ownerEmail').value.trim();
+    const ownerId    = document.getElementById('f-ownerId').value.trim();
+    const msg        = document.getElementById('add-msg');
+    const btn        = document.getElementById('add-store-btn');
 
-    msg.className = 'form-msg'; msg.style.display = 'none';
-
-    if (!storeId || !storeName || !ownerEmail || !ownerId) {
-      msg.textContent = 'Please fill in all required fields (*).';
-      msg.className   = 'form-msg error';
-      return;
+    msg.className='form-msg'; msg.style.display='none';
+    if (!storeId||!storeName||!ownerEmail||!ownerId) {
+      msg.textContent='Please fill in all required fields (*).'; msg.className='form-msg error'; return;
     }
     if (!/^[a-zA-Z0-9_-]+$/.test(storeId)) {
-      msg.textContent = 'Store ID can only contain letters, numbers, _ and -.';
-      msg.className   = 'form-msg error';
-      return;
+      msg.textContent='Store ID can only contain letters, numbers, _ and -.'; msg.className='form-msg error'; return;
     }
-
-    btn.disabled = true; btn.textContent = 'Adding…';
-
+    btn.disabled=true; btn.textContent='Adding…';
     try {
-      await setDoc(doc(db, 'stores', storeId), {
-        storeName, mallName, ownerEmail, ownerId,
-        createdAt: serverTimestamp()
-      });
-      msg.textContent = `Store "${storeName}" added successfully! QR URL: ${location.origin}/index.html?store=${storeId}`;
-      msg.className   = 'form-msg success';
-      ['f-storeId','f-storeName','f-mallName','f-ownerEmail','f-ownerId'].forEach(id =>
-        document.getElementById(id).value = '');
-      if (activeTab === 'stores') loadStores();
-    } catch(e) {
-      msg.textContent = 'Error: ' + e.message;
-      msg.className   = 'form-msg error';
-    } finally {
-      btn.disabled = false; btn.textContent = 'Add Store';
-    }
+      await setDoc(doc(db,'stores',storeId),{storeName,mallName,ownerEmail,ownerId,createdAt:serverTimestamp()});
+      msg.textContent=`Store "${storeName}" added! QR URL: ${location.origin}/index.html?store=${storeId}`;
+      msg.className='form-msg success';
+      ['f-storeId','f-storeName','f-mallName','f-ownerEmail','f-ownerId'].forEach(id=>document.getElementById(id).value='');
+      if (activeTab==='stores') loadStores();
+    } catch(e) { msg.textContent='Error: '+e.message; msg.className='form-msg error'; }
+    finally { btn.disabled=false; btn.textContent='Add Store'; }
   }
 
-  // ── Delete store ──
   function deleteStore(storeId, storeName) {
     pendingDelete = storeId;
     document.getElementById('confirm-msg').textContent =
-      `Delete store "${storeName}" (${storeId})? The store record will be removed. Mood data will NOT be deleted automatically.`;
+      `Delete store "${storeName}" (${storeId})? The store record will be removed. Response data will NOT be deleted automatically.`;
     document.getElementById('confirm-modal').classList.add('open');
     document.getElementById('confirm-yes').onclick = async () => {
       closeModal();
-      try {
-        await deleteDoc(doc(db, 'stores', pendingDelete));
-        loadStores();
-      } catch(e) { alert('Delete failed: ' + e.message); }
+      try { await deleteDoc(doc(db,'stores',pendingDelete)); loadStores(); }
+      catch(e) { alert('Delete failed: '+e.message); }
     };
   }
 
-  // ── Reset store data ──
   async function resetStoreData(storeId) {
-    if (!confirm(`Delete ALL mood responses for store "${storeId}"? This cannot be undone.`)) return;
+    if (!confirm(`Delete ALL responses for store "${storeId}"? This cannot be undone.`)) return;
     try {
-      const q    = query(collection(db, 'moods'), where('storeId','==',storeId));
-      const snap = await getDocs(q);
-      const dels = snap.docs.map(d => deleteDoc(doc(db,'moods',d.id)));
-      await Promise.all(dels);
+      const snap = await getDocs(query(collection(db,'moods'),where('storeId','==',storeId)));
+      await Promise.all(snap.docs.map(d=>deleteDoc(doc(db,'moods',d.id))));
       alert(`Deleted ${snap.size} responses for ${storeId}.`);
       loadStores();
-    } catch(e) { alert('Reset failed: ' + e.message); }
+    } catch(e) { alert('Reset failed: '+e.message); }
   }
 
-  function closeModal() {
-    document.getElementById('confirm-modal').classList.remove('open');
-    pendingDelete = null;
-  }
+  function closeModal() { document.getElementById('confirm-modal').classList.remove('open'); pendingDelete=null; }
 
-  // ── All feedback ──
   async function loadAllFeedback() {
     const tbody = document.getElementById('feedback-tbody');
     tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Loading…</td></tr>';
     try {
-      const snap  = await getDocs(query(collection(db,'moods'), orderBy('timestamp','desc'), limit(200)));
-      const moods = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      const emojiMap = { happy:'😊', neutral:'😐', unhappy:'😠' };
+      const snap  = await getDocs(query(collection(db,'moods'),orderBy('timestamp','desc'),limit(200)));
+      const moods = snap.docs.map(d=>({id:d.id,...d.data()}));
+      const emojiMap = {happy:'😊',neutral:'😐',unhappy:'😠'};
       tbody.innerHTML = moods.map(m => {
         const ts = m.timestamp ? m.timestamp.toDate() : new Date();
         return `<tr>
@@ -592,7 +548,7 @@
           <td style="white-space:nowrap;font-size:12px">${formatTime(ts)}</td>
         </tr>`;
       }).join('');
-    } catch(e) { tbody.innerHTML = '<tr><td colspan="4">Error: ' + e.message + '</td></tr>'; }
+    } catch(e) { tbody.innerHTML='<tr><td colspan="4">Error: '+e.message+'</td></tr>'; }
   }
 
   function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
