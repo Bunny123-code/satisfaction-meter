@@ -3,28 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>How Was Your Visit?</title>
+  <title>How Was Your Visit? – Satisfaction Meter</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --primary:   #4f46e5;
+      --primary:       #4f46e5;
+      --primary-dark:  #3730a3;
       --primary-light: #eef2ff;
-      --happy:     #16a34a;
-      --neutral:   #d97706;
-      --unhappy:   #dc2626;
-      --bg:        #f8fafc;
-      --card:      #ffffff;
-      --text:      #1e293b;
-      --muted:     #64748b;
-      --border:    #e2e8f0;
-      --radius:    16px;
-      --shadow:    0 4px 24px rgba(0,0,0,.08);
+      --happy:         #16a34a;
+      --neutral:       #d97706;
+      --unhappy:       #dc2626;
+      --bg:            #f8fafc;
+      --card:          #ffffff;
+      --text:          #1e293b;
+      --muted:         #64748b;
+      --border:        #e2e8f0;
+      --radius:        18px;
+      --shadow:        0 8px 40px rgba(79,70,229,.13), 0 2px 12px rgba(0,0,0,.07);
     }
 
     body {
       min-height: 100dvh;
-      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      background: linear-gradient(135deg, #3730a3 0%, #4f46e5 45%, #7c3aed 100%);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -32,40 +33,58 @@
       padding: 16px;
     }
 
+    /* ── Card ── */
     .card {
       background: var(--card);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       width: 100%;
-      max-width: 420px;
-      padding: 36px 28px 32px;
+      max-width: 430px;
+      padding: 38px 30px 34px;
       text-align: center;
+      position: relative;
+      overflow: hidden;
     }
 
+    /* Subtle top stripe */
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #4f46e5, #7c3aed, #a855f7);
+    }
+
+    /* ── Header ── */
     .mall-logo {
-      width: 56px;
-      height: 56px;
-      background: var(--primary-light);
-      border-radius: 14px;
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, var(--primary-light) 0%, #ddd6fe 100%);
+      border-radius: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
       margin: 0 auto 20px;
-      font-size: 28px;
+      font-size: 30px;
+      box-shadow: 0 4px 12px rgba(79,70,229,.15);
     }
 
     .store-name {
-      font-size: 13px;
-      font-weight: 600;
+      font-size: 11px;
+      font-weight: 700;
       color: var(--primary);
       text-transform: uppercase;
-      letter-spacing: .08em;
-      margin-bottom: 6px;
+      letter-spacing: .12em;
+      margin-bottom: 8px;
+      background: var(--primary-light);
+      display: inline-block;
+      padding: 3px 12px;
+      border-radius: 99px;
     }
 
     h1 {
-      font-size: 22px;
-      font-weight: 700;
+      font-size: 23px;
+      font-weight: 800;
       color: var(--text);
       line-height: 1.3;
       margin-bottom: 6px;
@@ -74,9 +93,10 @@
     .subtitle {
       font-size: 14px;
       color: var(--muted);
-      margin-bottom: 28px;
+      margin-bottom: 30px;
     }
 
+    /* ── Mood buttons ── */
     .mood-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -88,29 +108,37 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
-      padding: 18px 8px;
-      border: 2.5px solid var(--border);
-      border-radius: 14px;
-      background: #fff;
+      gap: 9px;
+      padding: 20px 8px;
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      background: #fafafa;
       cursor: pointer;
-      transition: all .18s ease;
+      transition: all .2s cubic-bezier(.34,1.56,.64,1);
+      user-select: none;
     }
 
-    .mood-btn:hover  { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.1); }
-    .mood-btn:active { transform: scale(.96); }
+    .mood-btn:hover  {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 24px rgba(0,0,0,.1);
+      border-color: #c7d2fe;
+      background: #fff;
+    }
+    .mood-btn:active { transform: scale(.94); transition-duration: .08s; }
 
-    .mood-btn .emoji { font-size: 42px; line-height: 1; }
-    .mood-btn .label { font-size: 12px; font-weight: 600; color: var(--muted); }
+    .mood-btn .emoji { font-size: 44px; line-height: 1; transition: transform .2s ease; }
+    .mood-btn:hover .emoji { transform: scale(1.12); }
+    .mood-btn .label { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: .04em; }
 
-    .mood-btn.selected-happy    { border-color: var(--happy);   background: #f0fdf4; }
-    .mood-btn.selected-neutral  { border-color: var(--neutral); background: #fffbeb; }
-    .mood-btn.selected-unhappy  { border-color: var(--unhappy); background: #fef2f2; }
+    .mood-btn.selected-happy    { border-color: var(--happy);   background: #f0fdf4; box-shadow: 0 0 0 4px rgba(22,163,74,.12); }
+    .mood-btn.selected-neutral  { border-color: var(--neutral); background: #fffbeb; box-shadow: 0 0 0 4px rgba(217,119,6,.12); }
+    .mood-btn.selected-unhappy  { border-color: var(--unhappy); background: #fef2f2; box-shadow: 0 0 0 4px rgba(220,38,38,.12); }
 
     .mood-btn.selected-happy    .label { color: var(--happy); }
     .mood-btn.selected-neutral  .label { color: var(--neutral); }
     .mood-btn.selected-unhappy  .label { color: var(--unhappy); }
 
+    /* ── Comment ── */
     .comment-wrap { margin-bottom: 22px; text-align: left; }
     .comment-wrap label {
       display: block;
@@ -122,31 +150,47 @@
     .comment-wrap textarea {
       width: 100%;
       border: 1.5px solid var(--border);
-      border-radius: 10px;
-      padding: 11px 13px;
+      border-radius: 12px;
+      padding: 12px 14px;
       font-size: 14px;
       font-family: inherit;
       resize: none;
-      height: 80px;
+      height: 84px;
       outline: none;
+      transition: border-color .18s, box-shadow .18s;
+      background: #fafafa;
+      color: var(--text);
     }
-    .comment-wrap textarea:focus { border-color: var(--primary); }
+    .comment-wrap textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79,70,229,.1);
+      background: #fff;
+    }
 
+    /* ── Submit ── */
     .submit-btn {
       width: 100%;
       padding: 15px;
       border: none;
-      border-radius: 12px;
-      background: var(--primary);
+      border-radius: 14px;
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
       color: #fff;
       font-size: 15px;
       font-weight: 700;
       cursor: pointer;
-      transition: background .18s;
+      transition: opacity .18s, transform .15s, box-shadow .18s;
+      box-shadow: 0 4px 16px rgba(79,70,229,.35);
+      letter-spacing: .02em;
     }
-    .submit-btn:hover:not(:disabled)  { background: #4338ca; }
-    .submit-btn:disabled { opacity: .55; cursor: not-allowed; }
+    .submit-btn:hover:not(:disabled) {
+      opacity: .92;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(79,70,229,.4);
+    }
+    .submit-btn:active:not(:disabled) { transform: scale(.98); }
+    .submit-btn:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
 
+    /* ── Error ── */
     .error-msg {
       display: none;
       background: #fef2f2;
@@ -156,44 +200,49 @@
       color: var(--unhappy);
       font-size: 13px;
       margin-bottom: 16px;
+      font-weight: 500;
     }
 
+    /* ── Thank you ── */
     .thankyou {
       display: none;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
-      padding: 12px 0 4px;
+      gap: 14px;
+      padding: 20px 0 8px;
     }
-    .thankyou .big-emoji { font-size: 64px; animation: pop .4s ease; }
-    .thankyou h2 { font-size: 22px; font-weight: 700; }
-    .thankyou p  { font-size: 14px; color: var(--muted); }
-
-    .progress-bar {
-      width: 100%;
-      height: 4px;
-      background: var(--border);
+    .thankyou .big-emoji { font-size: 72px; animation: popIn .5s cubic-bezier(.34,1.56,.64,1); }
+    .thankyou h2 { font-size: 24px; font-weight: 800; color: var(--text); }
+    .thankyou p  { font-size: 14px; color: var(--muted); max-width: 280px; line-height: 1.6; }
+    .thankyou .ty-badge {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: var(--happy);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 6px 18px;
       border-radius: 99px;
-      margin-top: 16px;
-      overflow: hidden;
-    }
-    .progress-bar-fill {
-      height: 100%;
-      background: var(--primary);
-      width: 0%;
-      animation: shrink 4s linear forwards;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    @keyframes pop {
-      0%   { transform: scale(.5); opacity: 0; }
-      70%  { transform: scale(1.15); }
-      100% { transform: scale(1); opacity: 1; }
-    }
-    @keyframes shrink {
-      from { width: 100%; }
-      to   { width: 0%; }
+    @keyframes popIn {
+      0%   { transform: scale(.3) rotate(-10deg); opacity: 0; }
+      60%  { transform: scale(1.2) rotate(3deg); }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
     }
 
+    /* ── Confetti canvas ── */
+    #confetti-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    /* ── Spinner ── */
     .spinner {
       display: inline-block;
       width: 18px; height: 18px;
@@ -208,13 +257,17 @@
   </style>
 </head>
 <body>
+
+<!-- Confetti canvas (hidden until submission) -->
+<canvas id="confetti-canvas"></canvas>
+
 <div class="card" id="root-card">
   <!-- Form view -->
   <div id="form-view">
-    <div class="mall-logo">🏪</div>
+    <div class="mall-logo">⭐</div>
     <div class="store-name" id="store-label">Loading store…</div>
     <h1>How was your experience?</h1>
-    <p class="subtitle">Tap an emoji to share your mood – it only takes a second!</p>
+    <p class="subtitle">Tap an emoji to share your satisfaction – it only takes a second!</p>
 
     <div class="mood-grid">
       <button class="mood-btn" id="btn-happy" data-mood="happy">
@@ -232,7 +285,7 @@
     </div>
 
     <div class="comment-wrap">
-      <label for="comment">Any comment? <span style="font-weight:400;">(optional)</span></label>
+      <label for="comment">Any comment? <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
       <textarea id="comment" placeholder="Tell us more…" maxlength="300"></textarea>
     </div>
 
@@ -240,11 +293,12 @@
     <button class="submit-btn" id="submit-btn" disabled>Submit Feedback</button>
   </div>
 
-  <!-- Thank you view (permanent after submission) -->
-  <div id="thankyou-view" class="thankyou" style="display: none;">
+  <!-- Thank you view -->
+  <div id="thankyou-view" class="thankyou" style="display:none;">
     <div class="big-emoji" id="ty-emoji">😊</div>
     <h2>Thank you!</h2>
-    <p>Your feedback helps us improve your experience.</p>
+    <p>Your feedback helps us improve your shopping experience.</p>
+    <div class="ty-badge">✔ Response recorded</div>
   </div>
 </div>
 
@@ -264,114 +318,80 @@
   };
 
   const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  const db  = getFirestore(app);
 
-  // Get storeId from URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const storeId = urlParams.get('store')?.trim();
+  const urlParams  = new URLSearchParams(window.location.search);
+  const storeId    = urlParams.get('store')?.trim();
 
   let selectedMood = null;
-  let storeName = storeId || 'Store';
+  let storeName    = storeId || 'Store';
 
-  // DOM elements
-  const storeLabel = document.getElementById('store-label');
-  const btnHappy = document.getElementById('btn-happy');
-  const btnNeutral = document.getElementById('btn-neutral');
-  const btnUnhappy = document.getElementById('btn-unhappy');
-  const commentEl = document.getElementById('comment');
-  const submitBtn = document.getElementById('submit-btn');
-  const errorMsgDiv = document.getElementById('error-msg');
-  const formView = document.getElementById('form-view');
-  const thankyouView = document.getElementById('thankyou-view');
-  const tyEmoji = document.getElementById('ty-emoji');
+  const storeLabel    = document.getElementById('store-label');
+  const btnHappy      = document.getElementById('btn-happy');
+  const btnNeutral    = document.getElementById('btn-neutral');
+  const btnUnhappy    = document.getElementById('btn-unhappy');
+  const commentEl     = document.getElementById('comment');
+  const submitBtn     = document.getElementById('submit-btn');
+  const errorMsgDiv   = document.getElementById('error-msg');
+  const formView      = document.getElementById('form-view');
+  const thankyouView  = document.getElementById('thankyou-view');
+  const tyEmoji       = document.getElementById('ty-emoji');
 
-  // Helper: show error
   function showError(msg) {
-    errorMsgDiv.textContent = msg;
+    errorMsgDiv.textContent  = msg;
     errorMsgDiv.style.display = 'block';
     setTimeout(() => { errorMsgDiv.style.display = 'none'; }, 4000);
   }
+  function hideError() { errorMsgDiv.style.display = 'none'; }
 
-  // Helper: hide error
-  function hideError() {
-    errorMsgDiv.style.display = 'none';
-  }
-
-  // Check if this device already submitted for this store
   function hasAlreadySubmitted() {
-    const key = `submitted_${storeId}`;
-    return localStorage.getItem(key) === 'true';
+    return localStorage.getItem(`submitted_${storeId}`) === 'true';
   }
-
-  // Mark as submitted
   function markSubmitted() {
-    const key = `submitted_${storeId}`;
-    localStorage.setItem(key, 'true');
+    localStorage.setItem(`submitted_${storeId}`, 'true');
   }
 
-  // Mood selection
   function selectMood(mood) {
-    if (hasAlreadySubmitted()) {
-      showError('You have already submitted feedback for this store.');
-      return;
-    }
+    if (hasAlreadySubmitted()) { showError('You have already submitted feedback for this store.'); return; }
     selectedMood = mood;
-    // Update UI
-    const moodMap = { happy: btnHappy, neutral: btnNeutral, unhappy: btnUnhappy };
-    Object.entries(moodMap).forEach(([m, btn]) => {
-      if (btn) {
-        if (m === mood) {
-          btn.classList.add(`selected-${m}`);
-        } else {
-          btn.classList.remove(`selected-happy`, `selected-neutral`, `selected-unhappy`);
-        }
-      }
+    [btnHappy, btnNeutral, btnUnhappy].forEach(btn => {
+      btn.classList.remove('selected-happy','selected-neutral','selected-unhappy');
     });
+    const map = { happy: btnHappy, neutral: btnNeutral, unhappy: btnUnhappy };
+    map[mood].classList.add(`selected-${mood}`);
     submitBtn.disabled = false;
     hideError();
   }
 
-  // Attach event listeners to mood buttons
-  btnHappy.addEventListener('click', () => selectMood('happy'));
+  btnHappy.addEventListener('click',   () => selectMood('happy'));
   btnNeutral.addEventListener('click', () => selectMood('neutral'));
   btnUnhappy.addEventListener('click', () => selectMood('unhappy'));
 
-  // Submit feedback
   async function submitFeedback() {
-    // Prevent if already submitted
-    if (hasAlreadySubmitted()) {
-      showError('You have already submitted feedback for this store.');
-      return;
-    }
-
-    if (!selectedMood) {
-      showError('Please select a mood first.');
-      return;
-    }
+    if (hasAlreadySubmitted()) { showError('You have already submitted feedback for this store.'); return; }
+    if (!selectedMood) { showError('Please select a mood first.'); return; }
 
     const comment = commentEl.value.trim();
-
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="spinner"></span>Submitting…';
 
     try {
       await addDoc(collection(db, 'moods'), {
-        storeId: storeId,
-        mood: selectedMood,
-        comment: comment || null,
+        storeId,
+        mood:      selectedMood,
+        comment:   comment || null,
         timestamp: serverTimestamp(),
         sessionId: Math.random().toString(36).slice(2) + Date.now().toString(36)
       });
 
-      // Mark this device as submitted for this store
       markSubmitted();
 
-      // Show thank you (permanent, no auto‑reset)
-      const emojiMap = { happy: '😊', neutral: '😐', unhappy: '😠' };
+      const emojiMap = { happy:'😊', neutral:'😐', unhappy:'😠' };
       tyEmoji.textContent = emojiMap[selectedMood] || '😊';
-      formView.style.display = 'none';
+      formView.style.display    = 'none';
       thankyouView.style.display = 'flex';
-      // Disable submit button permanently (already hidden)
+
+      if (selectedMood === 'happy') launchConfetti();
     } catch (err) {
       console.error('Submit error:', err);
       showError('Something went wrong. Please try again.');
@@ -382,46 +402,89 @@
 
   submitBtn.addEventListener('click', submitFeedback);
 
-  // Load store name from Firestore
   async function loadStoreName() {
-    if (!storeId) {
-      storeLabel.textContent = 'Invalid Store';
-      return;
-    }
-
-    // Show store ID immediately while loading
+    if (!storeId) { storeLabel.textContent = 'Invalid Store'; return; }
     storeLabel.textContent = storeId;
 
-    // If already submitted, immediately show thank you
     if (hasAlreadySubmitted()) {
-      formView.style.display = 'none';
+      formView.style.display     = 'none';
       thankyouView.style.display = 'flex';
       tyEmoji.textContent = '😊';
       return;
     }
-
     try {
-      const storeRef = doc(db, 'stores', storeId);
-      const storeSnap = await getDoc(storeRef);
-      if (storeSnap.exists()) {
-        const data = storeSnap.data();
-        storeName = data.storeName || storeId;
+      const snap = await getDoc(doc(db, 'stores', storeId));
+      if (snap.exists()) {
+        storeName = snap.data().storeName || storeId;
         storeLabel.textContent = storeName;
-      } else {
-        storeLabel.textContent = storeId;
       }
-    } catch (err) {
-      console.error('Error loading store:', err);
-      storeLabel.textContent = storeId;
-    }
+    } catch (err) { console.error('Error loading store:', err); }
   }
 
-  // Initialize
   if (!storeId) {
     storeLabel.textContent = 'Missing Store ID';
     submitBtn.disabled = true;
   } else {
     loadStoreName();
+  }
+</script>
+
+<!-- ── Confetti ── -->
+<script>
+  function launchConfetti() {
+    const canvas = document.getElementById('confetti-canvas');
+    const ctx    = canvas.getContext('2d');
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const COLORS = ['#4f46e5','#7c3aed','#16a34a','#d97706','#ec4899','#0ea5e9','#f59e0b'];
+    const pieces = Array.from({ length: 140 }, () => ({
+      x:  Math.random() * canvas.width,
+      y:  Math.random() * -canvas.height,
+      r:  Math.random() * 7 + 3,
+      d:  Math.random() * 80 + 20,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      tilt: Math.random() * 10 - 10,
+      tiltAngle: 0,
+      tiltAngleInc: (Math.random() * 0.07) + 0.05
+    }));
+
+    let frame = 0;
+    let animId;
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      pieces.forEach(p => {
+        ctx.beginPath();
+        ctx.lineWidth   = p.r / 2;
+        ctx.strokeStyle = p.color;
+        ctx.moveTo(p.x + p.tilt + p.r / 3, p.y);
+        ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 5);
+        ctx.stroke();
+      });
+      update();
+      frame++;
+      if (frame < 200) animId = requestAnimationFrame(draw);
+      else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        cancelAnimationFrame(animId);
+      }
+    }
+
+    function update() {
+      pieces.forEach(p => {
+        p.tiltAngle += p.tiltAngleInc;
+        p.y          += (Math.cos(frame / 20 + p.d) + 1 + p.r / 2) * 1.6;
+        p.x          += Math.sin(frame / 40) * 1.2;
+        p.tilt        = Math.sin(p.tiltAngle - frame / 3) * 12;
+        if (p.y > canvas.height) {
+          p.x = Math.random() * canvas.width;
+          p.y = -10;
+        }
+      });
+    }
+
+    draw();
   }
 </script>
 </body>
