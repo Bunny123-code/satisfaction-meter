@@ -1,37 +1,32 @@
-const CACHE_NAME = 'mood-meter-v1';
+const CACHE_NAME = 'satisfaction-meter-v1';
 const urlsToCache = [
-  '/mall-mood-meter/dashboard.html',
-  '/mall-mood-meter/manifest.json'
+  '/satisfaction-meter/dashboard.html',
+  '/satisfaction-meter/manifest.json'
 ];
 
-// Install event – cache essential files
+// Install – cache essential files
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
   );
 });
 
-// Fetch event – serve from cache if offline, fallback to network
+// Fetch – serve from cache if offline, fall back to network
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
       .then(response => response || fetch(event.request))
-      .catch(() => caches.match('/mall-mood-meter/dashboard.html'))
+      .catch(() => caches.match('/satisfaction-meter/dashboard.html'))
   );
 });
 
-// Activate – clean up old caches
+// Activate – remove old caches
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(name => {
-          if (name !== CACHE_NAME) {
-            return caches.delete(name);
-          }
-        })
-      );
-    })
+    caches.keys().then(names =>
+      Promise.all(
+        names.map(name => { if (name !== CACHE_NAME) return caches.delete(name); })
+      )
+    )
   );
 });
