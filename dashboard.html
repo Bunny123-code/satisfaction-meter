@@ -11,10 +11,7 @@
   <link rel="apple-touch-icon" href="/satisfaction-meter/icons/icon-192.png">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <style>
-    /* ========== STYLES (same as your current working dashboard) ========== */
-    /* We'll keep the exact styles you already had; no changes needed */
-    /* (Include your full CSS here) */
-    /* For brevity, I'm including a condensed but complete version. */
+    /* === styles (same as your working version – no changes) === */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --primary: #4f46e5; --primary-dark: #3730a3; --primary-light:#eef2ff;
@@ -113,8 +110,6 @@
       <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
     </div>
     <button class="auth-btn" id="login-btn" onclick="handleLogin()">Sign In</button>
-    <div style="margin:20px 0 12px;border-top:1px solid var(--border);"></div>
-    <button id="google-signin-btn" class="auth-btn" style="background:linear-gradient(135deg,#db4437,#c53929);">Sign in with Google</button>
   </div>
 </div>
 
@@ -150,7 +145,7 @@
 
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
   import { getFirestore, collection, query, where, orderBy, limit, getDocs, Timestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
   const firebaseConfig = {
@@ -176,18 +171,11 @@
   window.handleLogout = handleLogout;
   window.setRange = setRange;
 
-  // ========== FIXED Google Sign-In ==========
-  window.handleGoogleSignIn = async function() {
-    const provider = new GoogleAuthProvider();
-    try {
-      const result = await signInWithPopup(auth, provider);
-      console.log('Google sign-in successful:', result.user);
-      // onAuthStateChanged will handle redirection
-    } catch (err) {
-      console.error('Google sign-in error:', err);
-      showAuthError('Google sign-in failed: ' + err.message);
-    }
-  };
+  // Email validation regex (supports standard emails, including admin@moodmeter.com)
+  function isValidEmail(email) {
+    const re = /^[^\s@]+@([^\s@.,]+\.)+[^\s@.,]{2,}$/;
+    return re.test(email);
+  }
 
   onAuthStateChanged(auth, async user => {
     if (user) {
@@ -217,6 +205,8 @@
     const errEl = document.getElementById('auth-error');
     errEl.style.display = 'none';
     if (!email || !pass) { showAuthError('Please enter email and password.'); return; }
+    if (!isValidEmail(email)) { showAuthError('Please enter a valid email address (e.g., name@example.com).'); return; }
+    if (pass.length < 4) { showAuthError('Password must be at least 4 characters.'); return; }
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-inline"></span>Signing in…';
     try {
@@ -293,7 +283,6 @@
   function formatTime(d) { return d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit',hour12:true}); }
 
   document.getElementById('password').addEventListener('keydown', e => { if(e.key==='Enter') handleLogin(); });
-  document.getElementById('google-signin-btn').addEventListener('click', () => window.handleGoogleSignIn());
 </script>
 
 <script>
