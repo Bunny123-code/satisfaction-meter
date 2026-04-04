@@ -1,27 +1,55 @@
 {
-  "name": "Mood Meter Dashboard",
-  "short_name": "MoodMeter",
-  "description": "Real‑time store feedback dashboard",
-  "start_url": "/mall-mood-meter/dashboard.html",
+  "name": "Satisfaction Meter",
+  "short_name": "SatisfactionMeter",
+  "description": "Real-time store satisfaction feedback dashboard",
+  "start_url": "/satisfaction-meter/dashboard.html",
+  "scope": "/satisfaction-meter/",
   "display": "standalone",
   "theme_color": "#4f46e5",
   "background_color": "#ffffff",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://via.placeholder.com/144?text=MM",
+      "src": "/satisfaction-meter/icons/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png"
+    },
+    {
+      "src": "/satisfaction-meter/icons/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/satisfaction-meter/icons/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "/satisfaction-meter/icons/icon-144.png",
       "sizes": "144x144",
       "type": "image/png"
     },
     {
-      "src": "https://via.placeholder.com/192?text=MM",
-      "sizes": "192x192",
+      "src": "/satisfaction-meter/icons/icon-152.png",
+      "sizes": "152x152",
       "type": "image/png"
     },
     {
-      "src": "https://via.placeholder.com/512?text=MM",
-      "sizes": "512x512",
+      "src": "/satisfaction-meter/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/satisfaction-meter/icons/icon-384.png",
+      "sizes": "384x384",
       "type": "image/png"
+    },
+    {
+      "src": "/satisfaction-meter/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
