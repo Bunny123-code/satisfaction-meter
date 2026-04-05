@@ -3,8 +3,8 @@ const CACHE_NAME = 'satisfaction-meter-v2';
 const STATIC_URLS = [
   '/satisfaction-meter/dashboard.html',
   '/satisfaction-meter/manifest.json',
-  '/satisfaction-meter/icons/icon-192.png',
-  '/satisfaction-meter/icons/icon-512.png'
+  '/satisfaction-meter/icons/launchericon-192x192.png',
+  '/satisfaction-meter/icons/launchericon-512x512.png'
 ];
 
 // ── Install: pre-cache essential files ───────────────────────
