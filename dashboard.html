@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="/satisfaction-meter/icons/icon-192.png">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <style>
-    /* ========== STYLES (unchanged – same as your working version) ========== */
+    /* ========== STYLES – unchanged, same as before ========== */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --primary: #4f46e5; --primary-dark: #3730a3; --primary-light:#eef2ff;
@@ -54,8 +54,8 @@
     .stat-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
     .stat-card .sc-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; }
     .stat-card .sc-value { font-size: 34px; font-weight: 900; line-height: 1; }
-    .stat-card .sc-pct { font-size: 13px; font-weight: 600; color: var(--muted); }
-    .stat-card .sc-bar { height: 6px; border-radius: 99px; background: var(--border); margin-top: 4px; overflow: hidden; }
+    .stat-card .sc-pct   { font-size: 13px; font-weight: 600; color: var(--muted); }
+    .stat-card .sc-bar   { height: 6px; border-radius: 99px; background: var(--border); margin-top: 4px; overflow: hidden; }
     .stat-card .sc-bar-fill { height: 100%; border-radius: 99px; transition: width .6s cubic-bezier(.4,0,.2,1); }
     .stat-card.happy .sc-value { color: var(--happy); }
     .stat-card.neutral .sc-value { color: var(--neutral); }
@@ -78,9 +78,9 @@
     .recent-item { display: flex; align-items: flex-start; gap: 12px; padding: 13px; border: 1px solid var(--border); border-radius: 12px; transition: background .15s; }
     .recent-item:hover { background: #fafafa; border-color: #c7d2fe; }
     .recent-emoji { font-size: 26px; flex-shrink: 0; }
-    .recent-info { flex: 1; min-width: 0; }
+    .recent-info  { flex: 1; min-width: 0; }
     .recent-comment { font-size: 13px; color: var(--text); margin-bottom: 4px; word-break: break-word; line-height: 1.5; }
-    .recent-meta { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .recent-meta    { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
     .mood-badge { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 99px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
     .mood-badge.happy { background: #dcfce7; color: var(--happy); }
     .mood-badge.neutral { background: #fef3c7; color: var(--neutral); }
@@ -95,7 +95,7 @@
 </head>
 <body>
 
-<!-- AUTH SCREEN (NO GOOGLE BUTTON) -->
+<!-- AUTH SCREEN – NO GOOGLE BUTTON -->
 <div id="auth-screen">
   <div class="auth-card">
     <div class="logo">⭐</div>
@@ -287,7 +287,6 @@
 </script>
 
 <script>
-  // Install button logic (no Google)
   let deferredPrompt;
   const installBtn = document.getElementById('install-btn');
 
@@ -302,7 +301,6 @@
     };
   });
 
-  // Fallback after 3 seconds if beforeinstallprompt never fired
   setTimeout(() => {
     if (installBtn.style.display !== 'block') {
       installBtn.style.display = 'block';
