@@ -113,7 +113,7 @@
       transition: all .2s cubic-bezier(.34,1.56,.64,1);
     }
 
-    .mood-btn:hover  {
+    .mood-btn:hover {
       transform: translateY(-4px);
       box-shadow: 0 10px 24px rgba(0,0,0,.1);
       border-color: #c7d2fe;
@@ -294,24 +294,23 @@
   };
 
   const app = initializeApp(firebaseConfig);
-  const db  = getFirestore(app);
+  const db = getFirestore(app);
 
-  const urlParams  = new URLSearchParams(window.location.search);
-  const storeId    = urlParams.get('store')?.trim();
+  const urlParams = new URLSearchParams(window.location.search);
+  const storeId = urlParams.get('store')?.trim();
 
   let selectedMood = null;
-  let resetTimer = null;
 
-  const storeLabel    = document.getElementById('store-label');
-  const btnHappy      = document.getElementById('btn-happy');
-  const btnNeutral    = document.getElementById('btn-neutral');
-  const btnUnhappy    = document.getElementById('btn-unhappy');
-  const commentEl     = document.getElementById('comment');
-  const submitBtn     = document.getElementById('submit-btn');
-  const errorMsgDiv   = document.getElementById('error-msg');
-  const formView      = document.getElementById('form-view');
-  const thankyouView  = document.getElementById('thankyou-view');
-  const tyEmoji       = document.getElementById('ty-emoji');
+  const storeLabel = document.getElementById('store-label');
+  const btnHappy = document.getElementById('btn-happy');
+  const btnNeutral = document.getElementById('btn-neutral');
+  const btnUnhappy = document.getElementById('btn-unhappy');
+  const commentEl = document.getElementById('comment');
+  const submitBtn = document.getElementById('submit-btn');
+  const errorMsgDiv = document.getElementById('error-msg');
+  const formView = document.getElementById('form-view');
+  const thankyouView = document.getElementById('thankyou-view');
+  const tyEmoji = document.getElementById('ty-emoji');
 
   function showError(msg) {
     errorMsgDiv.textContent = msg;
@@ -320,22 +319,20 @@
   }
   function hideError() { errorMsgDiv.style.display = 'none'; }
 
-  function resetForm() {
-    if (resetTimer) clearTimeout(resetTimer);
-    selectedMood = null;
-    commentEl.value = '';
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = 'Submit Feedback';
-    [btnHappy, btnNeutral, btnUnhappy].forEach(btn => {
-      btn.classList.remove('selected-happy','selected-neutral','selected-unhappy');
-    });
-    formView.style.display = 'block';
-    thankyouView.style.display = 'none';
+  // sessionStorage: one submission per tab (survives refresh, cleared when tab closed)
+  function hasAlreadySubmitted() {
+    const key = `submitted_${storeId}`;
+    return sessionStorage.getItem(key) === 'true';
+  }
+
+  function markSubmitted() {
+    const key = `submitted_${storeId}`;
+    sessionStorage.setItem(key, 'true');
   }
 
   function selectMood(mood) {
-    if (resetTimer) {
-      // If we are in the middle of a reset cycle, ignore new selections
+    if (hasAlreadySubmitted()) {
+      showError('You have already submitted feedback for this store in this tab.');
       return;
     }
     selectedMood = mood;
@@ -348,13 +345,19 @@
     hideError();
   }
 
-  btnHappy.addEventListener('click',   () => selectMood('happy'));
+  btnHappy.addEventListener('click', () => selectMood('happy'));
   btnNeutral.addEventListener('click', () => selectMood('neutral'));
   btnUnhappy.addEventListener('click', () => selectMood('unhappy'));
 
   async function submitFeedback() {
-    if (!selectedMood) { showError('Please select a mood first.'); return; }
-    if (resetTimer) return; // prevent double submission during reset
+    if (hasAlreadySubmitted()) {
+      showError('You have already submitted feedback for this store in this tab.');
+      return;
+    }
+    if (!selectedMood) {
+      showError('Please select a mood first.');
+      return;
+    }
 
     const comment = commentEl.value.trim();
     submitBtn.disabled = true;
@@ -369,18 +372,14 @@
         sessionId: Math.random().toString(36).slice(2) + Date.now().toString(36)
       });
 
+      markSubmitted();
+
       const emojiMap = { happy:'😊', neutral:'😐', unhappy:'😠' };
       tyEmoji.textContent = emojiMap[selectedMood] || '😊';
-      formView.style.display    = 'none';
+      formView.style.display = 'none';
       thankyouView.style.display = 'flex';
 
       if (selectedMood === 'happy') launchConfetti();
-
-      // Automatically reset after 5 seconds so the next customer can use the device
-      resetTimer = setTimeout(() => {
-        resetForm();
-        resetTimer = null;
-      }, 5000);
     } catch (err) {
       console.error('Submit error:', err);
       showError('Something went wrong. Please try again.');
@@ -392,14 +391,28 @@
   submitBtn.addEventListener('click', submitFeedback);
 
   async function loadStoreName() {
-    if (!storeId) { storeLabel.textContent = 'Invalid Store'; return; }
+    if (!storeId) {
+      storeLabel.textContent = 'Invalid Store';
+      return;
+    }
     storeLabel.textContent = storeId;
+
+    // If already submitted in this tab, show thank you immediately
+    if (hasAlreadySubmitted()) {
+      formView.style.display = 'none';
+      thankyouView.style.display = 'flex';
+      tyEmoji.textContent = '😊';
+      return;
+    }
+
     try {
       const snap = await getDoc(doc(db, 'stores', storeId));
       if (snap.exists()) {
         storeLabel.textContent = snap.data().storeName || storeId;
       }
-    } catch (err) { console.error('Error loading store:', err); }
+    } catch (err) {
+      console.error('Error loading store:', err);
+    }
   }
 
   if (!storeId) {
@@ -413,55 +426,48 @@
 <script>
   function launchConfetti() {
     const canvas = document.getElementById('confetti-canvas');
-    const ctx    = canvas.getContext('2d');
-    canvas.width  = window.innerWidth;
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-
     const COLORS = ['#4f46e5','#7c3aed','#16a34a','#d97706','#ec4899','#0ea5e9','#f59e0b'];
     const pieces = Array.from({ length: 140 }, () => ({
-      x:  Math.random() * canvas.width,
-      y:  Math.random() * -canvas.height,
-      r:  Math.random() * 7 + 3,
-      d:  Math.random() * 80 + 20,
+      x: Math.random() * canvas.width,
+      y: Math.random() * -canvas.height,
+      r: Math.random() * 7 + 3,
+      d: Math.random() * 80 + 20,
       color: COLORS[Math.floor(Math.random() * COLORS.length)],
       tilt: Math.random() * 10 - 10,
       tiltAngle: 0,
       tiltAngleInc: (Math.random() * 0.07) + 0.05
     }));
-
     let frame = 0;
     let animId;
-
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       pieces.forEach(p => {
         ctx.beginPath();
-        ctx.lineWidth   = p.r / 2;
+        ctx.lineWidth = p.r / 2;
         ctx.strokeStyle = p.color;
         ctx.moveTo(p.x + p.tilt + p.r / 3, p.y);
         ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 5);
         ctx.stroke();
       });
-      update();
+      pieces.forEach(p => {
+        p.tiltAngle += p.tiltAngleInc;
+        p.y += (Math.cos(frame / 20 + p.d) + 1 + p.r / 2) * 1.6;
+        p.x += Math.sin(frame / 40) * 1.2;
+        p.tilt = Math.sin(p.tiltAngle - frame / 3) * 12;
+        if (p.y > canvas.height) {
+          p.x = Math.random() * canvas.width;
+          p.y = -10;
+        }
+      });
       frame++;
       if (frame < 200) animId = requestAnimationFrame(draw);
       else {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         cancelAnimationFrame(animId);
       }
-    }
-
-    function update() {
-      pieces.forEach(p => {
-        p.tiltAngle += p.tiltAngleInc;
-        p.y          += (Math.cos(frame / 20 + p.d) + 1 + p.r / 2) * 1.6;
-        p.x          += Math.sin(frame / 40) * 1.2;
-        p.tilt        = Math.sin(p.tiltAngle - frame / 3) * 12;
-        if (p.y > canvas.height) {
-          p.x = Math.random() * canvas.width;
-          p.y = -10;
-        }
-      });
     }
     draw();
   }
