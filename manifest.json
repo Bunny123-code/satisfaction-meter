@@ -1,13 +1,14 @@
 {
   "name": "Satisfaction Meter",
-  "short_name": "SatisfactionMeter",
-  "description": "Real-time store satisfaction feedback dashboard",
+  "short_name": "SatMeter",
+  "description": "Real-time store satisfaction feedback dashboard for shop owners",
   "start_url": "/satisfaction-meter/dashboard.html",
   "scope": "/satisfaction-meter/",
   "display": "standalone",
   "theme_color": "#4f46e5",
   "background_color": "#ffffff",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
+  "categories": ["business", "productivity"],
   "icons": [
     {
       "src": "/satisfaction-meter/icons/icon-72.png",
